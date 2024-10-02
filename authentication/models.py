@@ -51,3 +51,20 @@ class User(AbstractUser):
             if not self.pk:
                 self.set_password(self.password)
         super().save(*args, **kwargs)
+
+
+class SellerProfile(TimeStampMixin):
+    """
+    Seller profile model with additional fields.
+    Attributes:
+        user (OneToOneField): Foreign key to User model.
+        first_name (CharField): User's first name.
+        last_name (CharField): User's last name.
+        company_name (CharField): User's company name.
+        about_company (TextField): User's company description.
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    first_name = models.CharField(max_length=50, null=True, blank=True)
+    last_name = models.CharField(max_length=50, null=True, blank=True)
+    company_name = models.CharField(max_length=50, null=True, blank=True, default='personal business')
+    about_company = models.TextField(null=True, blank=True)
