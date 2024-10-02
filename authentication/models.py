@@ -18,7 +18,7 @@ class User(AbstractUser):
     """
     email_validator = RegexValidator(
         regex=r"^[a-zA-Z0-9._%+-]+@gmail\.com$",
-        message='لطفا یک ایمیل درست وارد کنید'
+        message="enter a valid email"
     )
     username_validator = RegexValidator(
         regex=r'^.{8,}$',
@@ -83,3 +83,4 @@ class CustomerProfile(TimeStampMixin):
     first_name = models.CharField(max_length=50, null=True, blank=True)
     last_name = models.CharField(max_length=50, null=True, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer_profile')
+    expired_at = None

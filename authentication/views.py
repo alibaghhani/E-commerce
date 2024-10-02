@@ -22,6 +22,27 @@ class CustomerViewSet(ViewSet):
                 user = serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             except IntegrityError as e:
+                print(e)
+                if 'unique constraint' in e.args[0]:
+                    return Response({"error": "Username or email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Username or email already exists"},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SellerViewSet(ViewSet):
+    queryset = User.objects.all()
+    serializer_class = SellerProfileSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            try:
+                user = serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except IntegrityError as e:
+                print(e)
                 if 'unique constraint' in e.args[0]:
                     return Response({"error": "Username or email already exists"}, status=status.HTTP_400_BAD_REQUEST)
                 return Response({"error": "Username or email already exists"},
