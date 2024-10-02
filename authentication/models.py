@@ -63,8 +63,22 @@ class SellerProfile(TimeStampMixin):
         company_name (CharField): User's company name.
         about_company (TextField): User's company description.
     """
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='seller profile')
     first_name = models.CharField(max_length=50, null=True, blank=True)
     last_name = models.CharField(max_length=50, null=True, blank=True)
     company_name = models.CharField(max_length=50, null=True, blank=True, default='personal business')
     about_company = models.TextField(null=True, blank=True)
+    expired_at = None
+
+
+class CustomerProfile(TimeStampMixin):
+    """
+    Customer profile model with additional fields.
+    Attributes:
+        user (OneToOneField): Foreign key to User model.
+        first_name (CharField): User's first name.
+        last_name (CharField): User's last name.
+    """
+    first_name = models.CharField(max_length=50, null=True, blank=True)
+    last_name = models.CharField(max_length=50, null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer-profile')
