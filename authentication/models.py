@@ -39,6 +39,7 @@ class User(AbstractUser):
 
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
+    is_seller = models.BooleanField(default=False)
     objects = UserManager()
 
     REQUIRED_FIELDS = ['email']
@@ -63,7 +64,7 @@ class SellerProfile(TimeStampMixin):
         company_name (CharField): User's company name.
         about_company (TextField): User's company description.
     """
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='seller profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='seller_profile')
     first_name = models.CharField(max_length=50, null=True, blank=True)
     last_name = models.CharField(max_length=50, null=True, blank=True)
     company_name = models.CharField(max_length=50, null=True, blank=True, default='personal business')
@@ -81,4 +82,4 @@ class CustomerProfile(TimeStampMixin):
     """
     first_name = models.CharField(max_length=50, null=True, blank=True)
     last_name = models.CharField(max_length=50, null=True, blank=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer-profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer_profile')
