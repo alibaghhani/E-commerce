@@ -70,3 +70,12 @@ class UsersProfileViewSet(ViewSet):
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
+
+    def retrieve(self, request, uuid=None):
+        try:
+            user = User.objects.get(uuid=uuid)
+            serializer = UserSerializer(user)
+            return Response(serializer.data)
+        except ObjectDoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
