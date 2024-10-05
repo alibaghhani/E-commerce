@@ -94,3 +94,18 @@ class UserAddressesViewSet(ViewSet):
         queryset = Address.objects.filter(costumer__uuid=user_uuid)
         serializer = AddressSerializer(queryset, many=True)
         return Response(serializer.data)
+
+    def retrieve(self, request, user_uuid=None, pk=None):
+        try:
+            address = Address.objects.get(pk=pk, costumer__uuid=user_uuid)
+            serializer = AddressSerializer(address)
+            return Response(serializer.data)
+        except Address.DoesNotExist:
+            return Response({"error": "Address not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def create(self, request: HttpRequest, *args, **kwargs):
+        serializer = AddressSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
