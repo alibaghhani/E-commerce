@@ -42,3 +42,14 @@ class Category(TimeStampMixin):
     def __str__(self):
         return f"{self.name}"
 
+
+class Image(TimeStampMixin):
+    image = models.ImageField(
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=["jpeg", "png", "jpg", "gif", "mp4", "avi", "flv"]
+            )
+        ],
+    )
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products_post')
