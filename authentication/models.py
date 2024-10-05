@@ -1,3 +1,4 @@
+import uuid
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
@@ -40,6 +41,7 @@ class User(AbstractUser):
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_seller = models.BooleanField(default=False)
+    uuid = models.UUIDField(default=uuid.uuid4(), editable=False, unique=True)
     objects = UserManager()
 
     REQUIRED_FIELDS = ['email']
@@ -70,6 +72,7 @@ class SellerProfile(TimeStampMixin):
     company_name = models.CharField(max_length=50, null=True, blank=True, default='personal business')
     about_company = models.TextField(null=True, blank=True)
     expired_at = None
+    is_blocked = models.BooleanField(default=False, null=True, blank=True)
 
 
 class CustomerProfile(TimeStampMixin):
@@ -87,26 +90,26 @@ class CustomerProfile(TimeStampMixin):
 
 
 class Address(TimeStampMixin):
-    class Address(models.Model):
-        """
-        Address model with additional fields.
-        Attributes:
-            costumer (ForeignKey): Foreign key to User model.
-            province (CharField): Province of the address.
-            city (CharField): City of the address.
-            street (CharField): Street of the address.
-            alley (CharField): Alley of the address.
-            house_number (CharField): House number of the address.
-            full_address (TextField): Full address.
-        """
+    """
+    Address model with additional fields.
+    Attributes:
+        costumer (ForeignKey): Foreign key to User model.
+        province (CharField): Province of the address.
+        city (CharField): City of the address.
+        street (CharField): Street of the address.
+        alley (CharField): Alley of the address.
+        house_number (CharField): House number of the address.
+        full_address (TextField): Full address.
+    """
 
-        costumer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='costumer_address')
-        province = models.CharField(max_length=25)
-        city = models.CharField(max_length=30)
-        street = models.CharField(max_length=250)
-        alley = models.CharField(max_length=250)
-        house_number = models.CharField(max_length=4)
-        full_address = models.TextField(max_length=250)
+    costumer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='costumer_address')
+    province = models.CharField(max_length=25)
+    city = models.CharField(max_length=30)
+    street = models.CharField(max_length=250)
+    alley = models.CharField(max_length=250)
+    house_number = models.CharField(max_length=4)
+    full_address = models.TextField(max_length=250)
+    expired_at = None
 
-        def __str__(self):
-            return f"{self.province} {self.city}"
+    def __str__(self):
+        return f"{self.province} {self.city}"
