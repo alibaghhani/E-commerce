@@ -1,13 +1,17 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
+from django.http import HttpRequest
 from django.shortcuts import render
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-
-from authentication.models import User, CustomerProfile, SellerProfile
-from authentication.seralizers import CustomerProfileSerializer, SellerProfileSerializer
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from authentication.models import User, CustomerProfile, SellerProfile, Address
+from authentication.seralizers import CustomerProfileSerializer, SellerProfileSerializer, AddressSerializer, \
+    UserSerializer
 from rest_framework.viewsets import ModelViewSet, ViewSet
+from .permissions import IsOwner
 
 
 class CustomerViewSet(ViewSet):
@@ -31,9 +35,9 @@ class CustomerViewSet(ViewSet):
 
 
 class SellerViewSet(ViewSet):
-    queryset = User.objects.all()
     serializer_class = SellerProfileSerializer
     permission_classes = [AllowAny]
+    authentication_classes = [JWTAuthentication]
 
     def create(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -44,7 +48,25 @@ class SellerViewSet(ViewSet):
             except IntegrityError as e:
                 print(e)
                 if 'unique constraint' in e.args[0]:
-                    return Response({"error": "Username or email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"error": "Username or email already exists"},
+                                    status=status.HTTP_400_BAD_REQUEST)
                 return Response({"error": "Username or email already exists"},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UsersProfileViewSet(ViewSet):
+    authentication_classes = [JWTAuthentication]
+    lookup_field = 'uuid'
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return [IsAdminUser()]
+        if self.action == 'retrieve':
+            return [IsAdminUser()]
+        return super().get_permissions()
+
+    def list(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
