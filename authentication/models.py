@@ -84,3 +84,29 @@ class CustomerProfile(TimeStampMixin):
     last_name = models.CharField(max_length=50, null=True, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer_profile')
     expired_at = None
+
+
+class Address(TimeStampMixin):
+    class Address(models.Model):
+        """
+        Address model with additional fields.
+        Attributes:
+            costumer (ForeignKey): Foreign key to User model.
+            province (CharField): Province of the address.
+            city (CharField): City of the address.
+            street (CharField): Street of the address.
+            alley (CharField): Alley of the address.
+            house_number (CharField): House number of the address.
+            full_address (TextField): Full address.
+        """
+
+        costumer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='costumer_address')
+        province = models.CharField(max_length=25)
+        city = models.CharField(max_length=30)
+        street = models.CharField(max_length=250)
+        alley = models.CharField(max_length=250)
+        house_number = models.CharField(max_length=4)
+        full_address = models.TextField(max_length=250)
+
+        def __str__(self):
+            return f"{self.province} {self.city}"
