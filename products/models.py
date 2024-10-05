@@ -23,3 +23,22 @@ class Product(TimeStampMixin):
 
     expired_at = None
 
+
+class Category(TimeStampMixin):
+    """
+    Category model for save product categories.
+    Attributes:
+        name (CharField): Category name.
+        parent (ForeignKey): Foreign key to Category model.
+        expired_at (DateTimeField): Timestamp for expiration.
+    """
+    name = models.CharField(max_length=250)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name="child")
+    expired_at = None
+
+    def get_all_parents(self):
+        return Category.objects.filter(parent_id=None)
+
+    def __str__(self):
+        return f"{self.name}"
+
