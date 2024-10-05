@@ -1,8 +1,15 @@
 from django.core.validators import RegexValidator
+from django.http import HttpRequest
 
-from authentication.models import User, CustomerProfile, SellerProfile
+from authentication.models import User, CustomerProfile, SellerProfile, Address
 from rest_framework import serializers
-from core.validator import email_validator, username_validator
+from core.validator import email_validator, username_validator, password_validator
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
 
 
 class CustomerProfileSerializer(serializers.Serializer):
@@ -15,7 +22,7 @@ class CustomerProfileSerializer(serializers.Serializer):
     """
     email = serializers.EmailField(max_length=50, required=True, validators=[email_validator])
     username = serializers.CharField(max_length=50, required=True, validators=[username_validator])
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, validators=[password_validator])
 
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
@@ -65,7 +72,7 @@ class SellerProfileSerializer(serializers.Serializer):
 
     email = serializers.EmailField(required=True, validators=[email_validator])
     username = serializers.CharField(max_length=50, required=True, validators=[username_validator])
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, validators=[password_validator])
 
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
@@ -114,3 +121,36 @@ class SellerProfileSerializer(serializers.Serializer):
             "company_name": user.seller_profile.company_name,
             "about_company": user.seller_profile.about_company
         }
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    """
+    Address serializer.
+    Attributes:
+        street (CharField): Address street.
+        city (CharField): Address city.
+        """
+
+    class Meta:
+        model = Address
+        fields = ('province', 'city', 'street', 'alley', 'house_number', 'full_address')
+
+    def create(self, validated_data):
+        request: HttpRequest = self.context.get('request')
+        user = request.user
+        address, created = Address.objects.get_or_create(
+            costumer=user,
+            province=validated_data.get('province'),
+            city=validated_data.get('city'),
+            street=validated_data.get('street'),
+            alley=validated_data.get('alley'),
+            house_number=validated_data.get('house_number'),
+            full_address=validated_data.get('full_address'),
+            defaults={
+                'expired_at': None
+            }
+        )
+        if created:
+            return address
+        else:
+            return address
