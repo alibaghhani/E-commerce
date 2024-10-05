@@ -79,3 +79,18 @@ class UsersProfileViewSet(ViewSet):
         except ObjectDoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
+
+class UserAddressesViewSet(ViewSet):
+    def get_permission(self):
+        if self.action == 'list':
+            return [IsAdminUser()]
+        if self.action == 'retrieve':
+            return [IsOwner()]
+        if self.action == 'create':
+            return [AllowAny()]
+        return super().get_permissions()
+
+    def list(self, request: HttpRequest, user_uuid=None):
+        queryset = Address.objects.filter(costumer__uuid=user_uuid)
+        serializer = AddressSerializer(queryset, many=True)
+        return Response(serializer.data)
