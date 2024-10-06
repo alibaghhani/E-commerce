@@ -81,6 +81,7 @@ class UsersProfileViewSet(ViewSet):
 
 
 class UserAddressesViewSet(ViewSet):
+    authentication_classes = [JWTAuthentication]
     def get_permission(self):
         if self.action == 'list':
             return [IsAdminUser()]
