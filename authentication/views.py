@@ -26,12 +26,18 @@ class CustomerViewSet(ViewSet):
                 user = serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             except IntegrityError as e:
-                print(e)
+                print("Integrity errorrr insideeeeeee->", e)
+                print(e.args)
                 if 'unique constraint' in e.args[0]:
-                    return Response({"error": "Username or email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"error": "Username or email already exists"}, status=status.HTTP_409_CONFLICT)
                 return Response({"error": "Username or email already exists"},
+                                status=status.HTTP_409_CONFLICT)
+            except Exception as e:
+                print(e)
+                return Response({"error": "An error occurred while creating the user"},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'errors': serializer.errors, 'message': 'input error: not valid'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class SellerViewSet(ViewSet):
@@ -51,7 +57,7 @@ class SellerViewSet(ViewSet):
                     return Response({"error": "Username or email already exists"},
                                     status=status.HTTP_400_BAD_REQUEST)
                 return Response({"error": "Username or email already exists"},
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                                status=status.HTTP_409_CONFLICT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -82,6 +88,7 @@ class UsersProfileViewSet(ViewSet):
 
 class UserAddressesViewSet(ViewSet):
     authentication_classes = [JWTAuthentication]
+
     def get_permission(self):
         if self.action == 'list':
             return [IsAdminUser()]
