@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import sys
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -30,7 +30,6 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'rest_framework',
-    'debug_toolbar',
     'rest_framework_simplejwt',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -42,7 +41,10 @@ INSTALLED_APPS = [
     "authentication.apps.AuthenticationConfig",
     "products.apps.ProductsConfig"
 ]
+TESTING = "test" in sys.argv
 
+if not TESTING:
+    INSTALLED_APPS += ['debug_toolbar']
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
@@ -59,7 +61,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'config.urls'
-
 
 TEMPLATES = [
     {
