@@ -35,4 +35,27 @@ class CustomerProfileTestCase(APITestCase):
         self.assertNotEqual(response.status_code, status.HTTP_201_CREATED)
 
 
+class SellerProfileTestCase(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
 
+        self.user_data = {
+            "email": "test_email@gmail.com",
+            "username": "test_userJGJGJ",
+            "password": "test_passwordGFG%^%&h",
+            "is_seller": True
+        }
+
+        self.seller_data = {
+            "first_name": "John",
+            "last_name": "Doe",
+            "company_name": "Test Company",
+            "about_company": "This is a test company."
+        }
+
+        self.base_url = reverse('seller-list')
+
+    def test_create_seller_profile(self):
+        self.user_data.update(self.seller_data)
+        response = self.client.post(self.base_url, self.user_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
