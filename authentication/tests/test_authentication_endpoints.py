@@ -59,3 +59,9 @@ class SellerProfileTestCase(APITestCase):
         self.user_data.update(self.seller_data)
         response = self.client.post(self.base_url, self.user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_if_IntegrityError_raises_properly(self):
+        self.user_data.update(self.seller_data)
+        self.client.post(self.base_url, self.user_data, format='json')
+        response = self.client.post(self.base_url, self.user_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
