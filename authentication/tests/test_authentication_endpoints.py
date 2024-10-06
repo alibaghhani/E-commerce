@@ -4,6 +4,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from collections import ChainMap
 
+from authentication.models import User
+
 
 class CustomerProfileTestCase(APITestCase):
     def setUp(self):
