@@ -146,9 +146,7 @@ class AddressSerializer(serializers.ModelSerializer):
             alley=validated_data.get('alley'),
             house_number=validated_data.get('house_number'),
             full_address=validated_data.get('full_address'),
-            defaults={
-                'expired_at': None
-            }
+
         )
         if created:
             return address
