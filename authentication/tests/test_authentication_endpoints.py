@@ -70,7 +70,7 @@ class SellerProfileTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
 
-class AddressTestCase(APITestCase):
+class UserTestCase(APITestCase):
     def setUp(self):
         client = APIClient()
         self.user_data = {
@@ -108,3 +108,7 @@ class AddressTestCase(APITestCase):
         serializer = UserSerializer(self.user_model_queryset, many=True)
         self.assertNotEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotEqual(response.data, serializer.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        print(response.status_code)
+
+
