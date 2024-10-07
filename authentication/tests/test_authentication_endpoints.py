@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from collections import ChainMap
-
+import json
 from authentication.models import User
 from authentication.seralizers import UserSerializer
 
@@ -91,11 +91,20 @@ class AddressTestCase(APITestCase):
 
         self.base_url = reverse('customer-profile-list')
 
+        self.user_model_queryset = User.objects.all()
+
     def test_is_admin_permission(self):
         admin = User.objects.create_superuser(**self.user_data)
         self.client.force_authenticate(user=admin)
         response = self.client.get(self.base_url)
-        queryset = User.objects.all()
-        serializer = UserSerializer(queryset, many=True)
+        serializer = UserSerializer(self.user_model_queryset, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
+
+    def test_user_can_see_others_profile(self):
+        user = User.objects.create_user(**self.user_data)
+        self.client.force_authenticate(user=user)
+        response = self.client.get(self.base_url)
+        serializer = UserSerializer(self.user_model_queryset, many=True)
+        self.assertNotEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(response.data, serializer.data)
