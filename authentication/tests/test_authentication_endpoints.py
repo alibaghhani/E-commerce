@@ -5,6 +5,7 @@ from rest_framework.test import APITestCase, APIClient
 from collections import ChainMap
 
 from authentication.models import User
+from authentication.seralizers import UserSerializer
 
 
 class CustomerProfileTestCase(APITestCase):
@@ -67,3 +68,34 @@ class SellerProfileTestCase(APITestCase):
         self.client.post(self.base_url, self.user_data, format='json')
         response = self.client.post(self.base_url, self.user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+
+
+class AddressTestCase(APITestCase):
+    def setUp(self):
+        client = APIClient()
+        self.user_data = {
+            "email": "TestEmail@gmail.com",
+            "username": "test-username",
+            "password": "TestPassw@rd"
+
+        }
+
+        self.address_data = {
+            "province": "Tehran",
+            "city": "Tehran",
+            "street": "1st Golbarg",
+            "house_number": 5,
+            "full_address": "1st Golbarg, Narenjestan Blvd., Shams Abaad Ind.Town, Hasan Abaad Old Rd."
+
+        }
+
+        self.base_url = reverse('customer-profile-list')
+
+    def test_is_admin_permission(self):
+        admin = User.objects.create_superuser(**self.user_data)
+        self.client.force_authenticate(user=admin)
+        response = self.client.get(self.base_url)
+        queryset = User.objects.all()
+        serializer = UserSerializer(queryset, many=True)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
