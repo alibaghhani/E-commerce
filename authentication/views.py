@@ -1,4 +1,4 @@
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import IntegrityError
 from django.http import HttpRequest
 from django.shortcuts import render
@@ -10,7 +10,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from authentication.models import User, CustomerProfile, SellerProfile, Address
 from authentication.seralizers import CustomerProfileSerializer, SellerProfileSerializer, AddressSerializer, \
     UserSerializer
-from rest_framework.viewsets import ModelViewSet, ViewSet
+from rest_framework.viewsets import ModelViewSet, ViewSet, GenericViewSet
+from rest_framework import mixins
 from .permissions import IsOwner
 
 
@@ -26,7 +27,6 @@ class CustomerViewSet(ViewSet):
                 user = serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             except IntegrityError as e:
-                print("Integrity errorrr insideeeeeee->", e)
                 print(e.args)
                 if 'unique constraint' in e.args[0]:
                     return Response({"error": "Username or email already exists"}, status=status.HTTP_409_CONFLICT)
@@ -61,29 +61,45 @@ class SellerViewSet(ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UsersProfileViewSet(ViewSet):
+class UsersProfileViewSet(GenericViewSet, mixins.ListModelMixin):
     authentication_classes = [JWTAuthentication]
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     lookup_field = 'uuid'
 
     def get_permissions(self):
         if self.action == 'list':
             return [IsAdminUser()]
         if self.action == 'retrieve':
-            return [IsAdminUser()]
+            return [IsOwner()]
         return super().get_permissions()
 
-    def list(self, request):
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        print('sjfhuihbfbgfkhsfbkwuhefvwufehgvqh')
+        is_seller = self.request.query_params.get('is_seller')
+        if is_seller:
+            queryset = queryset.filter(is_seller=is_seller)
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        return super(UsersProfileViewSet, self).list(request)
 
     def retrieve(self, request, uuid=None):
+
         try:
             user = User.objects.get(uuid=uuid)
+            self.check_object_permissions(request, user)
             serializer = UserSerializer(user)
             return Response(serializer.data)
         except ObjectDoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def update(self, request, uuid=None):
+        if bool(User.objects.get(uuid=uuid).is_seller):
+            SellerProfile.objects.filter(user__uuid=uuid).update(is_blocked=True)
+            return Response({"message": "user has been blocked successfully"}, status=status.HTTP_200_OK)
+        return Response({"message": "user is not seller"})
 
 
 class UserAddressesViewSet(ViewSet):
@@ -91,7 +107,7 @@ class UserAddressesViewSet(ViewSet):
 
     def get_permission(self):
         if self.action == 'list':
-            return [IsAdminUser()]
+            return [IsAdminUser(), IsOwner()]
         if self.action == 'retrieve':
             return [IsOwner()]
         if self.action == 'create':
