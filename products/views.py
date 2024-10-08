@@ -6,8 +6,6 @@ from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.viewsets import ModelViewSet
 
 
-# Create your views here.
-
 class CategoryViewSet(ModelViewSet):
     serializer_class = CategoryListActionSerializer
     queryset = Category.objects.all()
@@ -30,4 +28,11 @@ class CategoryViewSet(ModelViewSet):
     def get_permissions(self):
         if self.action == 'create':
             return [IsAdminUser()]
-        return [AllowAny()]
+        if self.action == 'update':
+            return [IsAdminUser()]
+        if self.action == 'destroy':
+            return [IsAdminUser()]
+
+
+
+
