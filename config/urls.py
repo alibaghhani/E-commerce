@@ -22,11 +22,12 @@ from config import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('authentication.urls'))
+    path('api/', include('authentication.urls')),
+    path('api/shop/', include('products.urls'))
 ]
 urlpatterns += debug_toolbar_urls()
 
 if not settings.TESTING:
     urlpatterns = [
-        *urlpatterns,
-    ] + debug_toolbar_urls()
+                      *urlpatterns,
+                  ] + debug_toolbar_urls()
