@@ -1,6 +1,9 @@
+import uuid
+from authentication.models import SellerProfile
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from core.models import TimeStampMixin
+from slugify import slugify
 
 
 class Product(TimeStampMixin):
@@ -20,8 +23,17 @@ class Product(TimeStampMixin):
     category = models.ForeignKey('Category', on_delete=models.PROTECT, related_name='product_category')
     warehouse = models.PositiveIntegerField(null=True, blank=True)
     slug = models.SlugField(unique=True)
+    seller = models.ManyToManyField(SellerProfile, related_name='seller_product')
 
     expired_at = None
+
+    def __str__(self):
+        return f'{self.name}'
+
+    def save(self, *args, **kwargs):
+        text = f"{self.slug}{uuid.uuid4()}"
+        self.slug = slugify(text)
+        super(Product, self).save(*args, **kwargs)
 
 
 class Category(TimeStampMixin):
