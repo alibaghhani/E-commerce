@@ -71,7 +71,7 @@ class UsersProfileViewSet(GenericViewSet, mixins.ListModelMixin):
         if self.action == 'list':
             return [IsAdminUser()]
         if self.action == 'retrieve':
-            return [IsOwner()]
+            return [IsAdminUser(), IsOwner()]
         return super().get_permissions()
 
     def get_queryset(self):
@@ -107,7 +107,7 @@ class UserAddressesViewSet(ViewSet):
 
     def get_permission(self):
         if self.action == 'list':
-            return [IsAdminUser(), IsOwner()]
+            return [IsOwner()]
         if self.action == 'retrieve':
             return [IsOwner()]
         if self.action == 'create':
@@ -115,6 +115,7 @@ class UserAddressesViewSet(ViewSet):
         return super().get_permissions()
 
     def list(self, request: HttpRequest, user_uuid=None):
+        print(user_uuid)
         queryset = Address.objects.filter(costumer__uuid=user_uuid)
         serializer = AddressSerializer(queryset, many=True)
         return Response(serializer.data)
@@ -123,7 +124,7 @@ class UserAddressesViewSet(ViewSet):
         try:
             address = Address.objects.get(pk=pk, costumer__uuid=user_uuid)
             serializer = AddressSerializer(address)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except Address.DoesNotExist:
             return Response({"error": "Address not found"}, status=status.HTTP_404_NOT_FOUND)
 
