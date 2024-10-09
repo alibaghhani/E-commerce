@@ -35,6 +35,9 @@ class Product(TimeStampMixin):
         self.slug = slugify(text)
         super(Product, self).save(*args, **kwargs)
 
+    class Meta:
+        ordering = ('price',)
+
 
 class Category(TimeStampMixin):
     """
