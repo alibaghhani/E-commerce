@@ -24,3 +24,16 @@ class CategoryDetailActionSerializer(serializers.ModelSerializer):
         if obj.parent:
             return obj.parent.name
         return None
+
+
+class ProductListActionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        exclude = ('detail', 'category', 'slug', 'warehouse', 'seller')
+
+
+class ProductDetailActionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
