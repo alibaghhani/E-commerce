@@ -41,7 +41,6 @@ class CustomerProfileTestCase(APITestCase):
 class SellerProfileTestCase(APITestCase):
     def setUp(self):
         self.client = APIClient()
-
         self.user_data = {
             "email": "test_email@gmail.com",
             "username": "test_userJGJGJ",
@@ -72,20 +71,12 @@ class SellerProfileTestCase(APITestCase):
 
 class UserTestCase(APITestCase):
     def setUp(self):
+
         client = APIClient()
         self.user_data = {
             "email": "TestEmail@gmail.com",
             "username": "test-username",
             "password": "TestPassw@rd"
-
-        }
-
-        self.address_data = {
-            "province": "Tehran",
-            "city": "Tehran",
-            "street": "1st Golbarg",
-            "house_number": 5,
-            "full_address": "1st Golbarg, Narenjestan Blvd., Shams Abaad Ind.Town, Hasan Abaad Old Rd."
 
         }
 
@@ -109,6 +100,34 @@ class UserTestCase(APITestCase):
         self.assertNotEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotEqual(response.data, serializer.data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        print(response.status_code)
 
 
+class AddressTestCase(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user_data = {
+            "email": "TestEmail@gmail.com",
+            "username": "test-username",
+            "password": "TestPassw@rd"
+
+        }
+
+        self.address_data = {
+            "province": "Tehran",
+            "city": "Tehran",
+            "street": "1st Golbarg",
+            "house_number": 5,
+            "full_address": "1st Golbarg, Narenjestan Blvd., Shams Abaad Ind.Town, Hasan Abaad Old Rd.",
+            "alley": "test-alley",
+
+        }
+
+        # self.list_or_create_base_url = reverse('user-addresses-list')
+
+    def test_create_address(self):
+        user = User.objects.create_user(**self.user_data)
+        address_url = reverse('user-addresses-list', kwargs={'user_uuid': user.uuid})
+        self.client.force_authenticate(user=user)
+        response = self.client.post(address_url, self.address_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # self.client.post(address_url, **)
