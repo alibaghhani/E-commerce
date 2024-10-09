@@ -1,5 +1,4 @@
 import uuid
-
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
@@ -62,3 +61,13 @@ class ProductAndCategoryTestCase(APITestCase):
         response = self.client.post(self.category_base_url, self.category_data, format='json')
         self.assertNotEqual(response.data, status.HTTP_201_CREATED)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_filter_categories(self):
+        response = self.client.get(self.category_base_url, {"category": "parent"})
+        self.assertEqual(None, response.data[0]['parent'])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['name'], 'Category 1')
+
+
+
