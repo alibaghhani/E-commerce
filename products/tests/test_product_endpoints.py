@@ -25,4 +25,11 @@ class ProductAndCategoryTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
 
-
+    def test_regular_user_can_see_categories(self):
+        user = User.objects.create_user(**self.user_data)
+        self.client.force_authenticate(user=user)
+        response = self.client.get(self.category_base_url)
+        queryset = Category.objects.all()
+        serializer = UserSerializer(queryset, many=True)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
