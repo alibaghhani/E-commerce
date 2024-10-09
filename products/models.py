@@ -23,7 +23,7 @@ class Product(TimeStampMixin):
     category = models.ForeignKey('Category', on_delete=models.PROTECT, related_name='product_category')
     warehouse = models.PositiveIntegerField(null=True, blank=True)
     slug = models.SlugField(unique=True)
-    seller = models.ManyToManyField(SellerProfile, related_name='seller_product')
+    seller = models.ForeignKey(SellerProfile, on_delete=models.PROTECT, related_name='seller_product')
 
     expired_at = None
 
