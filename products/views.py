@@ -13,7 +13,7 @@ from .serializers import CategoryDetailActionSerializer, CategoryListActionSeria
 from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.viewsets import ModelViewSet
 from authentication.permissions import IsSellerOrReadOnly
-from core.views import ListCreateDestroyRetrieveMixin
+
 
 class CategoryViewSet(ModelViewSet):
     serializer_class = CategoryListActionSerializer
@@ -69,13 +69,11 @@ class ProductViewSet(ModelViewSet):
             return self.serializer_class
 
     def list(self, request, category_id=None, *args, **kwargs):
-        print(category_id)
         queryset = Product.objects.filter(category__id=category_id)
         serializer = ProductListActionSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, category_id=None, slug=None, *args, **kwargs):
-        print(slug)
         try:
             queryset = Product.objects.get(slug=slug)
             serializer = ProductDetailActionSerializer(queryset)

@@ -33,7 +33,6 @@ class CustomerViewSet(ViewSet):
                 return Response({"error": "Username or email already exists"},
                                 status=status.HTTP_409_CONFLICT)
             except Exception as e:
-                print(e)
                 return Response({"error": "An error occurred while creating the user"},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response({'errors': serializer.errors, 'message': 'input error: not valid'},
@@ -52,7 +51,6 @@ class SellerViewSet(ViewSet):
                 user = serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             except IntegrityError as e:
-                print(e)
                 if 'unique constraint' in e.args[0]:
                     return Response({"error": "Username or email already exists"},
                                     status=status.HTTP_400_BAD_REQUEST)
@@ -76,7 +74,6 @@ class UsersProfileViewSet(GenericViewSet, mixins.ListModelMixin):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        print('sjfhuihbfbgfkhsfbkwuhefvwufehgvqh')
         is_seller = self.request.query_params.get('is_seller')
         if is_seller:
             queryset = queryset.filter(is_seller=is_seller)
@@ -115,7 +112,6 @@ class UserAddressesViewSet(ViewSet):
         return super().get_permissions()
 
     def list(self, request: HttpRequest, user_uuid=None):
-        print(user_uuid)
         queryset = Address.objects.filter(costumer__uuid=user_uuid)
         serializer = AddressSerializer(queryset, many=True)
         return Response(serializer.data)
