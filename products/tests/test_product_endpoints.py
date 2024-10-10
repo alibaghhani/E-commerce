@@ -24,7 +24,7 @@ class ProductAndCategoryTestCase(APITestCase):
             "uuid": uuid.uuid4(),
         }
 
-        category_obj = Category.objects.create(name="parent")
+        category_obj = Category.objects.create(name="test-category")
 
         self.category_data = {
             "name": "tes-tcategory",
@@ -69,4 +69,9 @@ class ProductAndCategoryTestCase(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['name'], 'parent')
 
-
+    def test_users_can_see_category_detail(self):
+        category_detail_url = reverse('categories-detail', kwargs={"id": 1})
+        response = self.client.get(category_detail_url)
+        self.assertNotEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['name'],'test-category')
+        print(response.data)
