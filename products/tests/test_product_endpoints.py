@@ -67,11 +67,10 @@ class ProductAndCategoryTestCase(APITestCase):
         self.assertEqual(None, response.data[0]['parent'])
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['name'], 'parent')
+        self.assertEqual(response.data[0]['name'], 'test-category')
 
     def test_users_can_see_category_detail(self):
         category_detail_url = reverse('categories-detail', kwargs={"id": 1})
         response = self.client.get(category_detail_url)
         self.assertNotEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data['name'],'test-category')
-        print(response.data)
+        self.assertEqual(response.data['name'], 'test-category')
