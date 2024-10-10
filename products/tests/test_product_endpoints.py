@@ -67,7 +67,6 @@ class ProductAndCategoryTestCase(APITestCase):
         self.assertEqual(None, response.data[0]['parent'])
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['name'], 'Category 1')
-
+        self.assertEqual(response.data[0]['name'], 'parent')
 
 
