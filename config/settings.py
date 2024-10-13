@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "core.apps.CoreConfig",
     "authentication.apps.AuthenticationConfig",
-    "products.apps.ProductsConfig"
+    "products.apps.ProductsConfig",
+    "order.apps.OrderConfig"
 ]
 TESTING = "test" in sys.argv
 
