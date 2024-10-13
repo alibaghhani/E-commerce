@@ -13,6 +13,7 @@ from .serializers import CategoryDetailActionSerializer, CategoryListActionSeria
 from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.viewsets import ModelViewSet
 from authentication.permissions import IsSellerOrAdminOrReadOnly
+from django.db.models import Min, Q, Max
 
 
 class CategoryViewSet(ModelViewSet):
@@ -95,6 +96,7 @@ class AllProductsViewSet(ModelViewSet):
     serializer_class = ProductListActionSerializer
     queryset = Product.objects.all()
     authentication_classes = [JWTAuthentication]
+    lookup_field = 'name'
 
     def get_permissions(self):
         if self.action in ['retrieve', 'delete', 'update']:
@@ -110,3 +112,34 @@ class AllProductsViewSet(ModelViewSet):
             return ProductDetailActionSerializer
         else:
             return self.serializer_class
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        price = self.request.query_params.get('price')
+        if price:
+            print(type(price))
+            if '-' in price:
+                min_value = str(price.split('-')[0])
+                max_value = str(price.split('-')[1])
+                if min_value and max_value:
+                    queryset = queryset.filter(
+                        price__gte=int(min_value),
+                        price__lte=int(max_value)
+                    )
+                if price[0] == '-':
+                    print(price)
+                    queryset = queryset.filter(price__lte=int(price.split('-')[1]))
+            if '-' not in price:
+                queryset = queryset.filter(price__gte=int(price))
+        order = self.request.query_params.get('order')
+        if order is not None:
+            fields = ['id', '-id', 'price', '-price', 'created_at', '-created_at']
+            if order in fields:
+                queryset = queryset.order_by(order)
+            else:
+                raise ValidationError({'error': f'order field must be in {fields}'})
+        if self.kwargs:
+            name = str(self.kwargs['name'])
+            queryset = Product.objects.filter(name__contains=name)
+        return queryset
+
