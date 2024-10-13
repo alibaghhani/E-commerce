@@ -35,7 +35,7 @@ class ProductAndCategoryTestCase(APITestCase):
 
         self.category_base_url = reverse('categories-list')
 
-    def test_admin_can_see_list_of_products(self):
+    def test_admin_can_see_list_of_categories(self):
         self.client.force_authenticate(user=self.admin)
         response = self.client.get(self.category_base_url)
         queryset = Category.objects.all()
