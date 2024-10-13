@@ -37,3 +37,8 @@ class ProductDetailActionSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
 
+
+class ProductCreateActionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
