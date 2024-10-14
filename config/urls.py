@@ -23,7 +23,8 @@ from config import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('authentication.urls')),
-    path('api/shop/', include('products.urls'))
+    path('api/shop/', include('products.urls')),
+    path('api/order/', include('order.urls'))
 ]
 urlpatterns += debug_toolbar_urls()
 
