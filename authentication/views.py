@@ -76,7 +76,12 @@ class UsersProfileViewSet(GenericViewSet, mixins.ListModelMixin):
         queryset = super().get_queryset()
         is_seller = self.request.query_params.get('is_seller')
         if is_seller:
-            queryset = queryset.filter(is_seller=is_seller)
+            if is_seller == 'True':
+                queryset = queryset.filter(is_seller=is_seller)
+            elif is_seller == 'False':
+                queryset = queryset.filter(is_seller=False)
+            else:
+                queryset = queryset.all()
         return queryset
 
     def list(self, request, *args, **kwargs):
