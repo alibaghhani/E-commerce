@@ -1,6 +1,7 @@
 from django.http import HttpRequest
 from rest_framework import serializers
 from .models import Basket
+from products.models import Product
 
 
 class BasketCreateSerializer(serializers.Serializer):
@@ -14,16 +15,11 @@ class BasketCreateSerializer(serializers.Serializer):
 
         if request and hasattr(request, 'user'):
             customer = request.user.customer_profile
-        else:
-            raise Exception("User is not authenticated.")
 
         product_entry = {product: quantity}
 
         basket, created = Basket.objects.get_or_create(customer=customer)
 
-        print('empty' if not basket.products_list else 'not empty ')
-        print(basket.products_list)
-        print(type(basket.products_list))
         if not basket.products_list:
             basket.products_list = []
             basket.products_list.append(product_entry)
@@ -35,12 +31,11 @@ class BasketCreateSerializer(serializers.Serializer):
                     basket.products_list.append(product_entry)
 
         basket.save()
-
         return basket
 
     def to_representation(self, instance):
         return {
             'id': instance.id,
-            'customer': instance.customer.id,
+            'customer': instance.customer.user.username,
             'products_list': instance.products_list,
         }
