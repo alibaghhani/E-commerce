@@ -3,9 +3,9 @@ from .views import BasketViewSet
 
 router = DefaultRouter()
 router.register(
-    r'basket',
+    r'order',
     BasketViewSet,
-    'basket'
+    'order'
 )
 
 urlpatterns = []
