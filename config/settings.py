@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
+    'debug_toolbar',
     'rest_framework_swagger',
     'rest_framework_simplejwt',
     'django.contrib.admin',
@@ -48,8 +49,8 @@ INSTALLED_APPS = [
 ]
 TESTING = "test" in sys.argv
 
-if not TESTING:
-    INSTALLED_APPS += ['debug_toolbar']
+# if not TESTING:
+#     INSTALLED_APPS += ['debug_toolbar']
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
