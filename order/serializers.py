@@ -16,7 +16,7 @@ class BasketCreateSerializer(serializers.Serializer):
         if request and hasattr(request, 'user'):
             customer = request.user.customer_profile
 
-        product_entry = {product: quantity}
+        product_entry = {"id": product, "quantity": quantity}
 
         basket, created = Basket.objects.get_or_create(customer=customer)
 
