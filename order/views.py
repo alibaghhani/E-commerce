@@ -8,7 +8,9 @@ from products.models import Product
 from .serializers import BasketCreateSerializer
 from rest_framework.viewsets import ModelViewSet
 from .models import Basket
+import logging
 
+logger = logging.getLogger(__name__)
 
 class BasketViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -28,9 +30,9 @@ class BasketViewSet(ModelViewSet):
     #     print(basket.products_list)
 
     def create(self, request, *args, **kwargs):
-
         serializer = BasketCreateSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
+            logger.debug("Received request data: %s", request.data)
             product_id = serializer.validated_data['product']
             product = Product.objects.get(id=product_id)
             quantity = serializer.validated_data['quantity']
@@ -45,11 +47,17 @@ class BasketViewSet(ModelViewSet):
                 print(f"{product.warehouse - quantity}")
                 Product.objects.filter(id=product_id).update(warehouse=product.warehouse - quantity)
             else:
+                logger.debug("Received request data: %s", request.data)
                 return Response(
                     {"message": "product's warehouse is lower than chosen quantity"},
                     status=status.HTTP_422_UNPROCESSABLE_ENTITY
                 )
+        logger.debug("Received request data: %s", request.data)
         return Response(serializer.errors)
 
-    # def list(self, request, *args, **kwargs):
-    #     basket = Basket.objects.get(customer=request.user.id)
+    def list(self, request, *args, **kwargs):
+        customer_id = request.user.customer_profile.id
+        basket = Basket.objects.get(customer__id=customer_id)
+        product_ids = basket.products_list.value_to_list()
+        print(product_ids)
+        return Response({"status": f"{basket.products_list}"})
