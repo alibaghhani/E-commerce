@@ -21,21 +21,17 @@ class BasketCreateSerializer(serializers.Serializer):
         basket, created = Basket.objects.get_or_create(customer=customer)
 
         if not basket.products_list:
-            basket.products_list = []
-            basket.products_list.append(product_entry)
+            basket.products_list = [product_entry]
         else:
+            product_found = False
             for items in basket.products_list:
-                if str(product) in items:
-                    items[str(product)] += quantity
-                else:
-                    basket.products_list.append(product_entry)
+                if items['id'] == product:
+                    items['quantity'] += quantity
+                    product_found = True
+                    break
+
+            if not product_found:
+                basket.products_list.append(product_entry)
 
         basket.save()
         return basket
-
-    def to_representation(self, instance):
-        return {
-            'id': instance.id,
-            'customer': instance.customer.user.username,
-            'products_list': instance.products_list,
-        }
