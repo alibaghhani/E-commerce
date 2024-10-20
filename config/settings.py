@@ -15,7 +15,7 @@ from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv("/home/alibaghani/projects/hello/E-commerce/.env")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     "core.apps.CoreConfig",
     "authentication.apps.AuthenticationConfig",
     "products.apps.ProductsConfig",
-    "order.apps.OrderConfig"
+    "order.apps.OrderConfig",
+    "checkout"
 ]
 TESTING = "test" in sys.argv
 
@@ -93,7 +94,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('NAME'),
-        'USER': os.getenv('USER'),
+        'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('PASSWORD'),
         'HOST': os.getenv('HOST'),
         'PORT': os.getenv('PORT'),
