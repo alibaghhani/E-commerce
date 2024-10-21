@@ -27,6 +27,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG')
 DATABASE_URL = os.getenv('DATABASE_URL')
 ALLOWED_HOSTS = []
+import redis
 
 # Application definition
 
@@ -158,3 +159,9 @@ SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
     'DEFAULT_MODEL_RENDERING': 'example',
 }
+
+client = redis.StrictRedis(
+        host="localhost",
+        port=6379,
+        db=1,
+)
