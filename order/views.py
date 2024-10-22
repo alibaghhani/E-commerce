@@ -40,3 +40,14 @@ class BasketViewSet(ViewSet):
             return Response({"message": "Product added to basket."}, status=status.HTTP_201_CREATED)
         except ValueError as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, *args, **kwargs):
+        product = request.data.get('product')
+        quantity = request.data.get('quantity')
+        assert str(quantity).isnumeric(), 'please enter a valid input'
+        basket = BasketRedisAdapter(request=request, product=product, quantity=quantity)
+        try:
+            basket.update_basket()
+            return Response({"message": "basket updated successfully"}, status=status.HTTP_200_OK)
+        except ValueError as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
