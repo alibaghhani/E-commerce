@@ -41,6 +41,15 @@ class BasketViewSet(ViewSet):
         except ValueError as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    def destroy(self, request, pk=None):
+        assert str(pk).isnumeric(), "please enter a valid id"
+        basket = BasketRedisAdapter(request=request, product=pk)
+        try:
+            basket.delete_from_basket()
+            return Response({"product was deleted successfully!"}, status=status.HTTP_202_ACCEPTED)
+        except ValueError as e:
+            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
     def partial_update(self, request, *args, **kwargs):
         product = request.data.get('product')
         quantity = request.data.get('quantity')
