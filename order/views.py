@@ -18,7 +18,7 @@ class BasketViewSet(ViewSet):
     def list(self, request: HttpRequest, *args, **kwargs):
         basket = BasketRedisAdapter(request=request)
         if basket.check_if_basket_exists():
-            return Response({"basket":basket.display_basket()}, status=status.HTTP_200_OK)
+            return Response({"basket": basket.display_basket()}, status=status.HTTP_200_OK)
         return Response({"message": "you dont have any basket!"}, status=status.HTTP_404_NOT_FOUND)
 
     def create(self, request, *args, **kwargs):
