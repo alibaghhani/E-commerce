@@ -22,8 +22,12 @@ class BasketRedisAdapter:
     def add_to_basket(self):
         if not self.product or self.quantity is None:
             raise ValueError("product and quantity must be specified.")
-        if self.check_if_product_exists(self.product, self.quantity):
-            self.__class__.__client.hset(f"user:{self.user}", self.product, self.quantity)
+        if self.check_warehouse(self.product, self.quantity):
+            if not self.__class__.__client.hexists(f"user:{self.user}", self.product):
+
+                self.__class__.__client.hset(f"user:{self.user}", self.product, self.quantity)
+            else:
+                raise ValueError('product already exists in basket')
         return True
 
     def delete_from_basket(self):
@@ -47,8 +51,13 @@ class BasketRedisAdapter:
             raise ValueError("address must be set!")
         self.__class__.__client.hset(f"user:{self.user}", "address", {self.address})
 
+    def update_basket(self):
+        if not self.product or self.quantity is None:
+            raise ValueError("product and quantity must be specified.")
+        self.__class__.__client.hset(f"user:{self.user}", self.product, self.quantity)
+
     @staticmethod
-    def check_if_product_exists(product_id, quantity):
+    def check_warehouse(product_id, quantity):
         available_in_stock = Product.objects.get(id=product_id).warehouse
         if int(quantity) > available_in_stock:
             raise ValueError("product not available in stock!")
