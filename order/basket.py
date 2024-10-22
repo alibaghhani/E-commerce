@@ -9,10 +9,11 @@ from products.models import Product
 class BasketRedisAdapter:
     __client = redis_client
 
-    def __init__(self, request: HttpRequest = None, product=None, quantity=None):
+    def __init__(self, request: HttpRequest = None, product=None, quantity=None, address=None):
         self.request = request
         self.product = product
         self.quantity = quantity
+        self.address = address
         self.user = self.request.user.id
 
     def check_if_basket_exists(self):
@@ -41,9 +42,10 @@ class BasketRedisAdapter:
             basket_to_display[product.name] = value
         return basket_to_display
 
-
-
-
+    def submit_basket(self):
+        if not self.address:
+            raise ValueError("address must be set!")
+        self.__class__.__client.hset(f"user:{self.user}", "address", {self.address})
 
     @staticmethod
     def check_if_product_exists(product_id, quantity):
