@@ -23,7 +23,7 @@ class SoftDelete(models.Model):
     everything = models.Manager()
     objects = NonDeletedObjects()
 
-    def soft_deleted(self):
+    def soft_delete(self):
         self.is_deleted = True
         self.save()
 
