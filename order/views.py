@@ -60,3 +60,36 @@ class BasketViewSet(ViewSet):
             return Response({"message": "basket updated successfully"}, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BasketSubmitViewSet(ViewSet):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsOwner]
+
+    def list(self, reqeust, *args, **kwargs):
+        basket = BasketRedisAdapter(request=reqeust)
+        return Response({"basket": basket.display_basket()}, status=status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
+        address_id = request.POST.get("address_id")
+        try:
+            address = Address.objects.get(id=int(address_id))
+            basket = BasketRedisAdapter(request=request, address=str(address_id))
+            if request.user.id == address.costumer.id:
+                basket.add_or_update_address()
+                return Response({"message": "address added successfully"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "you are not the address's owner!"}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            print(request.user.id)
+            print(type(Exception))
+            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+    def partial_update(self, request, *args, **kwargs):
+        address_id = request.data.get("address_id")
+        assert str(address_id).isnumeric(), 'please enter a valid input'
+        basket = BasketRedisAdapter(request=request, address=address_id)
+        try:
+            basket.update_basket()
+            return Response({"message": "basket updated successfully"}, status=status.HTTP_200_OK)
+        except ValueError as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
