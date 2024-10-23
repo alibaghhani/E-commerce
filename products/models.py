@@ -22,7 +22,7 @@ class Product(TimeStampMixin, SoftDelete):
     detail = models.TextField(max_length=250)
     category = models.ForeignKey('Category', on_delete=models.PROTECT, related_name='product_category')
     warehouse = models.PositiveIntegerField(null=True, blank=True)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, max_length=250)
     seller = models.ForeignKey(SellerProfile, on_delete=models.PROTECT, related_name='seller_product')
 
     expired_at = None
