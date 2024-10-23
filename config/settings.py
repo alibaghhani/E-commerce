@@ -160,11 +160,17 @@ SWAGGER_SETTINGS = {
     'DEFAULT_MODEL_RENDERING': 'example',
 }
 
-redis_client = redis.StrictRedis(
+redis_client_first_db = redis.StrictRedis(
     host="localhost",
     port=6379,
     db=1,
 )
+redis_client_second_db = redis.StrictRedis(
+    host="localhost",
+    port=6379,
+    db=2
+)
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
