@@ -1,13 +1,17 @@
+import uuid
+
+from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
 import json
-from config.settings import redis_client
+from config.settings import redis_client_first_db, redis_client_second_db
 from products.models import Product
 
 
 class BasketRedisAdapter:
-    __client = redis_client
+    __client = redis_client_first_db
+    __payment_client = redis_client_second_db
 
     def __init__(self, request: HttpRequest = None, product=None, quantity=None, address=None):
         self.request = request
@@ -72,9 +76,7 @@ class BasketRedisAdapter:
             if str(self.address) == str(value):
                 raise ValueError("address already exists!")
 
-
         self.__class__.__client.hset(f"user:{self.user}", "address", self.address)
-
 
     def update_basket(self):
         if not self.product or self.quantity is None:
@@ -83,14 +85,12 @@ class BasketRedisAdapter:
             self.__class__.__client.hset(f"user:{self.user}", self.product, self.quantity)
             self.change_stock()
 
-
     @staticmethod
     def check_warehouse(product_id, quantity):
         available_in_stock = Product.objects.get(id=product_id).warehouse
         if int(quantity) > available_in_stock:
             raise ValueError("product not available in stock!")
         return True
-
 
     def get_total_price(self):
         basket = self.__class__.__client.hgetall(f"user:{self.user}")
@@ -100,7 +100,7 @@ class BasketRedisAdapter:
         list_of_prices = []
         for key, value in basket_dict.items():
             price = Product.objects.get(id=str(key)).price
-            list_of_prices.append(price*int(value))
+            list_of_prices.append(price * int(value))
 
         return list_of_prices
 
@@ -108,15 +108,29 @@ class BasketRedisAdapter:
     def total_price(self):
         return sum(self.get_total_price())
 
-
     def change_stock(self):
         product_stock = Product.objects.get(id=self.product).warehouse
         if self.request.method in ["POST", "PATCH"]:
-            Product.objects.filter(id=self.product).update(warehouse=product_stock-int(self.quantity))
+            Product.objects.filter(id=self.product).update(warehouse=product_stock - int(self.quantity))
 
             return True
-        Product.objects.filter(id=self.product).update(warehouse=product_stock+int(self.quantity))
+        Product.objects.filter(id=self.product).update(warehouse=product_stock + int(self.quantity))
         return True
 
+    def set_payment_information(self, message=None):
+        user = get_user_model().objects.get(id=self.user).uuid
+        self.__class__.__payment_client.hset(
+            f"payment:{user}",
+            mapping={
+                "total_price": self.total_price,
+                "user": str(user),
+                "payment_id": str(uuid.uuid4()),
+                "status": message
+            }
+        )
+        return self.__class__.__payment_client.hgetall(f"payment:{user}")
 
+    @property
+    def payment_information(self):
+        return self.set_payment_information()
 
