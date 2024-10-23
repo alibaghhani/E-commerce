@@ -15,6 +15,7 @@ class BasketRedisAdapter:
         self.quantity = quantity
         self.address = address
         self.user = self.request.user.id
+        self.basket_to_display = {}
 
     def check_if_basket_exists(self):
         return self.__class__.__client.exists(f"user:{self.user}") == 1
@@ -88,6 +89,23 @@ class BasketRedisAdapter:
         if int(quantity) > available_in_stock:
             raise ValueError("product not available in stock!")
         return True
+
+
+    def get_total_price(self):
+        basket = self.__class__.__client.hgetall(f"user:{self.user}")
+        basket_dict = {key.decode('utf-8'): value.decode('utf-8') for key, value in basket.items()}
+        del basket_dict['address']
+        list_of_prices = []
+        for key, value in basket_dict.items():
+            price = Product.objects.get(id=str(key)).price
+            list_of_prices.append(price*int(value))
+
+        return list_of_prices
+
+    @property
+    def total_price(self):
+        return sum(self.get_total_price())
+
     @staticmethod
     def change_stock(request:HttpRequest, product_id, quantity):
         product_stock = Product.objects.get(id=product_id).warehouse
