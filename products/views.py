@@ -46,11 +46,14 @@ class CategoryViewSet(ModelViewSet):
         return super().get_permissions()
 
 
+
+
 class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductListActionSerializer
     authentication_classes = [JWTAuthentication]
     lookup_field = 'slug'
+    filter_backends = []
 
     def get_permissions(self):
         if self.action == 'create':
@@ -78,10 +81,7 @@ class ProductViewSet(ModelViewSet):
         queryset = queryset.filter(category__id=self.kwargs['category_id'])
         return queryset
 
-    # def list(self, request, category_id=None, *args, **kwargs):
-    #     queryset = Product.objects.filter(category__id=category_id)
-    #     serializer = ProductListActionSerializer(queryset, many=True)
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
+
 
     def retrieve(self, request, category_id=None, slug=None, *args, **kwargs):
         try:
@@ -99,7 +99,7 @@ class AllProductsViewSet(ModelViewSet):
     lookup_field = 'name'
 
     def get_permissions(self):
-        if self.action in ['retrieve', 'delete', 'update']:
+        if self.action in ['retrieve', 'destroy', 'update']:
             return [IsSellerOrAdminOrReadOnly()]
         if self.action == 'list':
             return [AllowAny()]
