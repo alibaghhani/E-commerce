@@ -2,11 +2,11 @@ import uuid
 from authentication.models import SellerProfile
 from django.core.validators import FileExtensionValidator
 from django.db import models
-from core.models import TimeStampMixin
+from core.models import TimeStampMixin,SoftDelete
 from slugify import slugify
 
 
-class Product(TimeStampMixin):
+class Product(TimeStampMixin, SoftDelete):
     """
     Product model for save products.
     Attributes:
@@ -58,7 +58,7 @@ class Category(TimeStampMixin):
         return f"{self.name}"
 
 
-class Image(TimeStampMixin):
+class Image(TimeStampMixin, SoftDelete):
     image = models.ImageField(
         validators=[
             FileExtensionValidator(
