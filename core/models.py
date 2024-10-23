@@ -1,5 +1,5 @@
 from django.db import models
-
+from .managers import NonDeletedObjects
 
 class TimeStampMixin(models.Model):
     """
@@ -17,3 +17,19 @@ class TimeStampMixin(models.Model):
     class Meta:
         abstract = True
 
+
+class SoftDelete(models.Model):
+    is_deleted = models.BooleanField(default=False)
+    everything = models.Manager()
+    objects = NonDeletedObjects()
+
+    def soft_deleted(self):
+        self.is_deleted = True
+        self.save()
+
+    def restore(self):
+        self.is_deleted = False
+        self.save()
+
+    class Meta:
+        abstract = True
