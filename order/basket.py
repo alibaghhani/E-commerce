@@ -27,7 +27,7 @@ class BasketRedisAdapter:
             if not self.__class__.__client.hexists(f"user:{self.user}", self.product):
 
                 self.__class__.__client.hset(f"user:{self.user}", self.product, self.quantity)
-                self.change_stock(self.request, self.product, self.quantity)
+                self.change_stock()
 
             else:
                 raise ValueError('product already exists in basket')
@@ -38,7 +38,7 @@ class BasketRedisAdapter:
             raise ValueError("Product not found in basket.")
 
         self.__class__.__client.hdel(f"user:{self.user}", self.product)
-        self.change_stock(self.request, self.product, self.quantity)
+        self.change_stock()
         return True
 
     def display_basket(self):
@@ -63,6 +63,7 @@ class BasketRedisAdapter:
         return self.basket_to_display
 
     def add_or_update_address(self):
+        print(self.address)
         if self.request.method == "POST":
             if not self.address:
                 raise ValueError("address must be set!")
@@ -80,7 +81,7 @@ class BasketRedisAdapter:
             raise ValueError("product and quantity must be specified.")
         if self.check_warehouse(self.product, self.quantity):
             self.__class__.__client.hset(f"user:{self.user}", self.product, self.quantity)
-            self.change_stock(self.request, self.product, self.quantity)
+            self.change_stock()
 
 
     @staticmethod
@@ -94,7 +95,8 @@ class BasketRedisAdapter:
     def get_total_price(self):
         basket = self.__class__.__client.hgetall(f"user:{self.user}")
         basket_dict = {key.decode('utf-8'): value.decode('utf-8') for key, value in basket.items()}
-        del basket_dict['address']
+        if 'address' in basket_dict:
+            del basket_dict['address']
         list_of_prices = []
         for key, value in basket_dict.items():
             price = Product.objects.get(id=str(key)).price
@@ -106,13 +108,15 @@ class BasketRedisAdapter:
     def total_price(self):
         return sum(self.get_total_price())
 
-    @staticmethod
-    def change_stock(request:HttpRequest, product_id, quantity):
-        product_stock = Product.objects.get(id=product_id).warehouse
-        if request.method in ["POST", "PATCH"]:
-            Product.objects.filter(id=product_id).update(warehouse=product_stock-int(quantity))
+
+    def change_stock(self):
+        product_stock = Product.objects.get(id=self.product).warehouse
+        if self.request.method in ["POST", "PATCH"]:
+            Product.objects.filter(id=self.product).update(warehouse=product_stock-int(self.quantity))
 
             return True
-        Product.objects.filter(id=product_id).update(warehouse=product_stock+int(quantity))
+        Product.objects.filter(id=self.product).update(warehouse=product_stock+int(self.quantity))
         return True
+
+
 
