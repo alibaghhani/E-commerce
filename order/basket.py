@@ -38,18 +38,38 @@ class BasketRedisAdapter:
         return True
 
     def display_basket(self):
-        basket_to_display = {}
         basket = self.__class__.__client.hgetall(f"user:{self.user}")
         basket_dict = {key.decode('utf-8'): value.decode('utf-8') for key, value in basket.items()}
+        address = None
         for key, value in basket_dict.items():
-            product = Product.objects.get(id=str(key))
-            basket_to_display[product.name] = value
-        return basket_to_display
+            if key == "address":
+                address = value
+                continue
 
-    def submit_basket(self):
-        if not self.address:
-            raise ValueError("address must be set!")
-        self.__class__.__client.hset(f"user:{self.user}", "address", {self.address})
+            if key.isdigit():
+                try:
+                    product = Product.objects.get(id=str(key))
+                    self.basket_to_display[product.name] = value
+                except Product.DoesNotExist:
+                    continue
+
+        if address:
+            self.basket_to_display["address"] = address
+        self.basket_to_display['total_price'] = self.total_price
+        return self.basket_to_display
+
+    def add_or_update_address(self):
+        if self.request.method == "POST":
+            if not self.address:
+                raise ValueError("address must be set!")
+
+            value = self.__class__.__client.hget(f"user:{self.user}", "address").decode('utf-8')
+            if str(self.address) == str(value):
+                raise ValueError("address already exists!")
+
+
+        self.__class__.__client.hset(f"user:{self.user}", "address", self.address)
+
 
     def update_basket(self):
         if not self.product or self.quantity is None:
