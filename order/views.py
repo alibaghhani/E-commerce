@@ -3,6 +3,8 @@ from django.http import HttpRequest
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
+
+from authentication.models import Address
 from authentication.permissions import IsOwner
 from rest_framework.viewsets import ViewSet, ModelViewSet
 import json
