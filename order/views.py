@@ -78,12 +78,11 @@ class BasketSubmitViewSet(ViewSet):
             address = Address.objects.get(id=int(address_id))
             basket = BasketRedisAdapter(request=request, address=str(address_id))
             if request.user.id == address.costumer.id:
+
                 basket.add_or_update_address()
                 return Response({"message": "address added successfully"}, status=status.HTTP_403_FORBIDDEN)
             return Response({"message": "you are not the address's owner!"}, status=status.HTTP_201_CREATED)
         except Exception as e:
-            print(request.user.id)
-            print(type(Exception))
             return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
     def partial_update(self, request, *args, **kwargs):
