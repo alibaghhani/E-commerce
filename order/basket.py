@@ -26,6 +26,8 @@ class BasketRedisAdapter:
             if not self.__class__.__client.hexists(f"user:{self.user}", self.product):
 
                 self.__class__.__client.hset(f"user:{self.user}", self.product, self.quantity)
+                self.change_stock(self.request, self.product, self.quantity)
+
             else:
                 raise ValueError('product already exists in basket')
         return True
@@ -35,6 +37,7 @@ class BasketRedisAdapter:
             raise ValueError("Product not found in basket.")
 
         self.__class__.__client.hdel(f"user:{self.user}", self.product)
+        self.change_stock(self.request, self.product, self.quantity)
         return True
 
     def display_basket(self):
@@ -74,12 +77,24 @@ class BasketRedisAdapter:
     def update_basket(self):
         if not self.product or self.quantity is None:
             raise ValueError("product and quantity must be specified.")
-        self.__class__.__client.hset(f"user:{self.user}", self.product, self.quantity)
+        if self.check_warehouse(self.product, self.quantity):
+            self.__class__.__client.hset(f"user:{self.user}", self.product, self.quantity)
+            self.change_stock(self.request, self.product, self.quantity)
+
 
     @staticmethod
     def check_warehouse(product_id, quantity):
         available_in_stock = Product.objects.get(id=product_id).warehouse
         if int(quantity) > available_in_stock:
             raise ValueError("product not available in stock!")
+        return True
+    @staticmethod
+    def change_stock(request:HttpRequest, product_id, quantity):
+        product_stock = Product.objects.get(id=product_id).warehouse
+        if request.method in ["POST", "PATCH"]:
+            Product.objects.filter(id=product_id).update(warehouse=product_stock-int(quantity))
+
+            return True
+        Product.objects.filter(id=product_id).update(warehouse=product_stock+int(quantity))
         return True
 
