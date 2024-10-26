@@ -9,7 +9,7 @@ from authentication.permissions import IsOwner
 from rest_framework.viewsets import ViewSet, ModelViewSet
 import json
 
-from order.basket import BasketRedisAdapter
+from order.basket import BasketAndOrderRedisAdapter
 
 
 class BasketViewSet(ViewSet):
@@ -18,7 +18,7 @@ class BasketViewSet(ViewSet):
     user_model = get_user_model()
 
     def list(self, request: HttpRequest, *args, **kwargs):
-        basket = BasketRedisAdapter(request=request)
+        basket = BasketAndOrderRedisAdapter(request=request)
         if basket.check_if_basket_exists():
             return Response({"basket": basket.display_basket()}, status=status.HTTP_200_OK)
         return Response({"message": "you dont have any basket!"}, status=status.HTTP_404_NOT_FOUND)
@@ -35,7 +35,7 @@ class BasketViewSet(ViewSet):
             return Response({"message": "enter valid inputs for product_id and quantity."},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        basket = BasketRedisAdapter(request=request, product=product, quantity=quantity)
+        basket = BasketAndOrderRedisAdapter(request=request, product=product, quantity=quantity)
 
         try:
             basket.add_to_basket()
@@ -45,7 +45,7 @@ class BasketViewSet(ViewSet):
 
     def destroy(self, request, pk=None):
         assert str(pk).isnumeric(), "please enter a valid id"
-        basket = BasketRedisAdapter(request=request, product=pk)
+        basket = BasketAndOrderRedisAdapter(request=request, product=pk)
         try:
             basket.delete_from_basket()
             return Response({"product was deleted successfully!"}, status=status.HTTP_202_ACCEPTED)
@@ -56,7 +56,7 @@ class BasketViewSet(ViewSet):
         product = request.data.get('product')
         quantity = request.data.get('quantity')
         assert str(quantity).isnumeric(), 'please enter a valid input'
-        basket = BasketRedisAdapter(request=request, product=product, quantity=quantity)
+        basket = BasketAndOrderRedisAdapter(request=request, product=product, quantity=quantity)
         try:
             basket.update_basket()
             return Response({"message": "basket updated successfully"}, status=status.HTTP_200_OK)
@@ -69,14 +69,16 @@ class BasketSubmitViewSet(ViewSet):
     permission_classes = [IsOwner]
 
     def list(self, reqeust, *args, **kwargs):
-        basket = BasketRedisAdapter(request=reqeust)
+        basket = BasketAndOrderRedisAdapter(request=reqeust)
         return Response({"basket": basket.display_basket()}, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
+        print("here we go")
         address_id = request.POST.get("address_id")
+        print("here we go")
         try:
             address = Address.objects.get(id=int(address_id))
-            basket = BasketRedisAdapter(request=request, address=str(address_id))
+            basket = BasketAndOrderRedisAdapter(request=request, address=str(address_id))
             if request.user.id == address.costumer.id:
 
                 basket.add_or_update_address()
@@ -88,7 +90,7 @@ class BasketSubmitViewSet(ViewSet):
     def partial_update(self, request, *args, **kwargs):
         address_id = request.data.get("address_id")
         assert str(address_id).isnumeric(), 'please enter a valid input'
-        basket = BasketRedisAdapter(request=request, address=address_id)
+        basket = BasketAndOrderRedisAdapter(request=request, address=address_id)
         try:
             basket.update_basket()
             return Response({"message": "basket updated successfully"}, status=status.HTTP_200_OK)
