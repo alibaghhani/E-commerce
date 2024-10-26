@@ -70,14 +70,12 @@ class Image(TimeStampMixin, SoftDelete):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products_post')
 
 
-class Discount(TimeStampMixin):
+class DiscountCode(TimeStampMixin):
     """
-    discount model
+    discount coupon model
 
     -----fields-----
-    discount = models.PositiveIntegerField(max_length=250, blank=True, null=True, unique=True)
-    product = models.ForeignKey(Product,on_delete=models.CASCADE,related_name='product_discount')
-
+        code = models.CharField(max_length=8, blank=True, null=True, unique=True)
 
     """
     DISCOUNT_CHOICES = (
@@ -85,5 +83,9 @@ class Discount(TimeStampMixin):
         ('cash', '$')
     )
     type_of_discount = models.CharField(choices=DISCOUNT_CHOICES, max_length=250, null=True, blank=True)
-    discount = models.PositiveIntegerField(blank=True, null=True, unique=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_discount')
+    discount = models.PositiveIntegerField(blank=True, null=True)
+    code = models.CharField(max_length=8, blank=True, null=True, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='user_discount_code')
+
+    def __str__(self):
+        return "%s" % self.code
