@@ -12,7 +12,7 @@ from .serializers import CategoryDetailActionSerializer, CategoryListActionSeria
     ProductListActionSerializer, ProductCreateActionSerializer
 from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.viewsets import ModelViewSet
-from authentication.permissions import IsSellerOrAdminOrReadOnly
+from authentication.permissions import IsSellerOrAdminOrReadOnly, SoftDeleteAndHardDeleteBasedOnUsersRole
 from django.db.models import Min, Q, Max
 
 
@@ -23,8 +23,8 @@ class CategoryViewSet(ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        is_seller = self.request.query_params.get('category')
-        if is_seller == 'parents':
+        category = self.request.query_params.get('category', '').lower()
+        if category == 'parents':
             queryset = queryset.filter(parent=None)
         return queryset
 
@@ -54,14 +54,14 @@ class ProductViewSet(ModelViewSet):
     authentication_classes = [JWTAuthentication]
     lookup_field = 'slug'
     filter_backends = []
+    print("hbfkwehrbfjehbgjehbehjrbgehjgbehjbgjehr")
 
     def get_permissions(self):
-        if self.action == 'create':
+        if self.action in ['create','update']:
             return [IsSellerOrAdminOrReadOnly()]
-        if self.action == 'update':
-            return [IsSellerOrAdminOrReadOnly()]
+        print("method destroyeeee aghahaha")
         if self.action == 'destroy':
-            return [IsSellerOrAdminOrReadOnly()]
+            return [SoftDeleteAndHardDeleteBasedOnUsersRole()]
         return super().get_permissions()
 
     def get_serializer_class(self, *args, **kwargs):
@@ -92,11 +92,13 @@ class ProductViewSet(ModelViewSet):
             return Response({"error": "product not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
+
+
 class AllProductsViewSet(ModelViewSet):
     serializer_class = ProductListActionSerializer
     queryset = Product.objects.all()
     authentication_classes = [JWTAuthentication]
-    lookup_field = 'name'
+    lookup_field = 'slug'
 
     def get_permissions(self):
         if self.action in ['retrieve', 'destroy', 'update']:
@@ -138,8 +140,9 @@ class AllProductsViewSet(ModelViewSet):
                 queryset = queryset.order_by(order)
             else:
                 raise ValidationError({'error': f'order field must be in {fields}'})
-        if self.kwargs:
-            name = str(self.kwargs['name'])
-            queryset = Product.objects.filter(name__contains=name)
+        if 'slug' in self.kwargs:
+            queryset = queryset.filter(slug=self.kwargs['slug'])
         return queryset
+
+
 
