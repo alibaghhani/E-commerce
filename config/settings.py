@@ -168,7 +168,7 @@ redis_client_first_db = redis.StrictRedis(
 redis_client_second_db = redis.StrictRedis(
     host="localhost",
     port=6379,
-    db=2
+    db=3
 )
 
 CACHES = {
