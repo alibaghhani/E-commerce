@@ -9,7 +9,7 @@ from config.settings import redis_client_first_db, redis_client_second_db
 from products.models import Product
 
 
-class BasketRedisAdapter:
+class BasketAndOrderRedisAdapter:
     __client = redis_client_first_db
     __payment_client = redis_client_second_db
 
@@ -72,7 +72,7 @@ class BasketRedisAdapter:
             if not self.address:
                 raise ValueError("address must be set!")
 
-            value = self.__class__.__client.hget(f"user:{self.user}", "address").decode('utf-8')
+            value = self.__class__.__client.hget(f"user:{self.user}", "address")
             if str(self.address) == str(value):
                 raise ValueError("address already exists!")
 
@@ -120,12 +120,12 @@ class BasketRedisAdapter:
     def set_payment_information(self, message=None):
         user = get_user_model().objects.get(id=self.user).uuid
         self.__class__.__payment_client.hset(
-            f"payment:{user}",
+            f"payment:{str(user)}",
             mapping={
                 "total_price": self.total_price,
                 "user": str(user),
                 "payment_id": str(uuid.uuid4()),
-                "status": message
+                "status": str(message)
             }
         )
         return self.__class__.__payment_client.hgetall(f"payment:{user}")
@@ -133,4 +133,7 @@ class BasketRedisAdapter:
     @property
     def payment_information(self):
         return self.set_payment_information()
+
+
+
 
