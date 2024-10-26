@@ -1,4 +1,6 @@
-from django.http import Http404
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404, HttpRequest
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -14,7 +16,7 @@ from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.viewsets import ModelViewSet
 from authentication.permissions import IsSellerOrAdminOrReadOnly, SoftDeleteAndHardDeleteBasedOnUsersRole
 from django.db.models import Min, Q, Max
-
+from django.utils.text import slugify
 
 class CategoryViewSet(ModelViewSet):
     serializer_class = CategoryListActionSerializer
@@ -54,14 +56,12 @@ class ProductViewSet(ModelViewSet):
     authentication_classes = [JWTAuthentication]
     lookup_field = 'slug'
     filter_backends = []
-    print("hbfkwehrbfjehbgjehbehjrbgehjgbehjbgjehr")
 
     def get_permissions(self):
         if self.action in ['create','update']:
             return [IsSellerOrAdminOrReadOnly()]
-        print("method destroyeeee aghahaha")
         if self.action == 'destroy':
-            return [SoftDeleteAndHardDeleteBasedOnUsersRole()]
+            return [AllowAny()]
         return super().get_permissions()
 
     def get_serializer_class(self, *args, **kwargs):
@@ -73,7 +73,6 @@ class ProductViewSet(ModelViewSet):
             return self.serializer_class
 
     def get_queryset(self):
-        print(self.kwargs)
         queryset = super().get_queryset()
         products = self.request.query_params.get('products')
         if products == 'all':
@@ -98,13 +97,15 @@ class AllProductsViewSet(ModelViewSet):
     serializer_class = ProductListActionSerializer
     queryset = Product.objects.all()
     authentication_classes = [JWTAuthentication]
-    lookup_field = 'slug'
+    lookup_field = "slug"
 
     def get_permissions(self):
-        if self.action in ['retrieve', 'destroy', 'update']:
+        if self.action in ['retrieve', 'update']:
             return [IsSellerOrAdminOrReadOnly()]
         if self.action == 'list':
             return [AllowAny()]
+        if self.action ==  'destroy':
+            return [SoftDeleteAndHardDeleteBasedOnUsersRole()]
         return super().get_permissions()
 
     def get_serializer_class(self, *args, **kwargs):
@@ -134,15 +135,32 @@ class AllProductsViewSet(ModelViewSet):
             if '-' not in price:
                 queryset = queryset.filter(price__gte=int(price))
         order = self.request.query_params.get('order')
+        print("get queryset has been called=====>")
         if order is not None:
             fields = ['id', '-id', 'price', '-price', 'created_at', '-created_at']
             if order in fields:
                 queryset = queryset.order_by(order)
             else:
                 raise ValidationError({'error': f'order field must be in {fields}'})
-        if 'slug' in self.kwargs:
-            queryset = queryset.filter(slug=self.kwargs['slug'])
+        # if 'slug' in self.kwargs:
+        #     print("inja")
+        #     queryset = queryset.filter(slug=self.kwargs.get('slug'))
         return queryset
+
+    def destroy(self, request:HttpRequest, *args, **kwargs):
+
+        product = Product.objects.get(slug=kwargs.get("slug"))
+        user = get_user_model().objects.get(id=request.user.id)
+        try:
+            if user.is_seller:
+                product.soft_delete()
+                return Response({"message":"product has been deleted successfully!"},status=status.HTTP_200_OK)
+            if request.user.is_superuser:
+                product.delete()
+                return Response({"message": "product has been deleted successfully!"},status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            return Response({"message":"product does not exists!"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"message":"you dont have permission to do this act!"})
 
 
 
