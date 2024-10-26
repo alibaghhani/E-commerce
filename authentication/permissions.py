@@ -1,4 +1,9 @@
+from http.client import HTTPResponse
+
+from django.contrib.auth import get_user_model
+from django.http import HttpRequest
 from rest_framework.permissions import BasePermission, SAFE_METHODS
+from urllib3 import request
 
 
 class IsOwner(BasePermission):
