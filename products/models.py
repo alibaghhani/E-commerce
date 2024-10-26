@@ -2,7 +2,7 @@ import uuid
 from authentication.models import SellerProfile
 from django.core.validators import FileExtensionValidator
 from django.db import models
-from core.models import TimeStampMixin,SoftDelete
+from core.models import TimeStampMixin, SoftDelete
 from slugify import slugify
 
 
@@ -68,3 +68,22 @@ class Image(TimeStampMixin, SoftDelete):
     )
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products_post')
+
+
+class Discount(TimeStampMixin):
+    """
+    discount model
+
+    -----fields-----
+    discount = models.PositiveIntegerField(max_length=250, blank=True, null=True, unique=True)
+    product = models.ForeignKey(Product,on_delete=models.CASCADE,related_name='product_discount')
+
+
+    """
+    DISCOUNT_CHOICES = (
+        ('percentage', '%'),
+        ('cash', '$')
+    )
+    type_of_discount = models.CharField(choices=DISCOUNT_CHOICES, max_length=250, null=True, blank=True)
+    discount = models.PositiveIntegerField(blank=True, null=True, unique=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_discount')
