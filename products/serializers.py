@@ -1,5 +1,4 @@
-from authentication.models import User
-from .models import Product, Category, Image
+from .models import Product, Category
 from rest_framework import serializers
 
 

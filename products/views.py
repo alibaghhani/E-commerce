@@ -1,22 +1,16 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404, HttpRequest
-from django.shortcuts import render
+from django.http import HttpRequest
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.generics import ListAPIView, RetrieveDestroyAPIView, GenericAPIView
 from .models import Category, Product
 from .serializers import CategoryDetailActionSerializer, CategoryListActionSerializer, ProductDetailActionSerializer, \
     ProductListActionSerializer, ProductCreateActionSerializer
 from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.viewsets import ModelViewSet
-from authentication.permissions import IsSellerOrAdminOrReadOnly, SoftDeleteAndHardDeleteBasedOnUsersRole
-from django.db.models import Min, Q, Max
-from django.utils.text import slugify
+from authentication.permissions import IsSellerOrAdminOrReadOnly
 
 class CategoryViewSet(ModelViewSet):
     serializer_class = CategoryListActionSerializer
@@ -120,7 +114,6 @@ class AllProductsViewSet(ModelViewSet):
         queryset = super().get_queryset()
         price = self.request.query_params.get('price')
         if price:
-            print(type(price))
             if '-' in price:
                 min_value = str(price.split('-')[0])
                 max_value = str(price.split('-')[1])
@@ -130,12 +123,10 @@ class AllProductsViewSet(ModelViewSet):
                         price__lte=int(max_value)
                     )
                 if price[0] == '-':
-                    print(price)
                     queryset = queryset.filter(price__lte=int(price.split('-')[1]))
             if '-' not in price:
                 queryset = queryset.filter(price__gte=int(price))
         order = self.request.query_params.get('order')
-        print("get queryset has been called=====>")
         if order is not None:
             fields = ['id', '-id', 'price', '-price', 'created_at', '-created_at']
             if order in fields:
@@ -143,7 +134,6 @@ class AllProductsViewSet(ModelViewSet):
             else:
                 raise ValidationError({'error': f'order field must be in {fields}'})
         # if 'slug' in self.kwargs:
-        #     print("inja")
         #     queryset = queryset.filter(slug=self.kwargs.get('slug'))
         return queryset
 

@@ -21,7 +21,6 @@ fake = Faker()
 
 
 def create_users():
-    print("Creating users...")
     users = []
     for _ in range(100):
         user = User.objects.create(
@@ -34,12 +33,10 @@ def create_users():
             uuid=uuid.uuid4()
         )
         users.append(user)
-    print("Users created.")
     return users
 
 
 def create_seller_profiles(users):
-    print("Creating seller profiles...")
     sellers = [user for user in users if user.is_seller]
     seller_profiles = []
     for user in sellers:
@@ -51,12 +48,10 @@ def create_seller_profiles(users):
             about_company=fake.paragraph()
         )
         seller_profiles.append(seller_profile)
-    print("Seller profiles created.")
     return seller_profiles
 
 
 def create_customer_profiles(users):
-    print("Creating customer profiles...")
     customers = [user for user in users if not user.is_seller]
     customer_profiles = []
     for user in customers:
@@ -66,12 +61,10 @@ def create_customer_profiles(users):
             last_name=fake.last_name()
         )
         customer_profiles.append(customer_profile)
-    print("Customer profiles created.")
     return customer_profiles
 
 
 def create_categories():
-    print("Creating categories...")
     categories = []
     for _ in range(10):
         category = Category.objects.create(
@@ -79,12 +72,10 @@ def create_categories():
             parent=None  # Add parent relationships if needed
         )
         categories.append(category)
-    print("Categories created.")
     return categories
 
 
 def create_products(seller_profiles, categories):
-    print("Creating products...")
     products = []
     for _ in range(100):
         product = Product.objects.create(
@@ -97,22 +88,18 @@ def create_products(seller_profiles, categories):
             seller=random.choice(seller_profiles)
         )
         products.append(product)
-    print("Products created.")
     return products
 
 
 def create_images(products):
-    print("Creating images for products...")
     for product in products:
         Image.objects.create(
             product=product,
             image=fake.image_url()  # Use actual images if needed; adjust this as per your setup.
         )
-    print("Images created.")
 
 
 def create_baskets(customer_profiles, products):
-    print("Creating baskets...")
     for customer in customer_profiles:
         basket = Basket.objects.create(
             customer=customer,
@@ -120,11 +107,9 @@ def create_baskets(customer_profiles, products):
             quantity=random.randint(1, 10),
             product=random.choice(products)
         )
-    print("Baskets created.")
 
 
 def create_addresses(users):
-    print("Creating addresses...")
     for user in users:
         Address.objects.create(
             costumer=user,
@@ -135,7 +120,6 @@ def create_addresses(users):
             house_number=str(random.randint(1, 9999)),
             full_address=fake.address()
         )
-    print("Addresses created.")
 
 
 def main():
@@ -147,7 +131,6 @@ def main():
     create_images(products)
     create_baskets(customer_profiles, products)
     create_addresses(users)
-    print("Dummy data generation completed.")
 
 
 if __name__ == '__main__':

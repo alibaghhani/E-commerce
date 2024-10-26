@@ -1,10 +1,6 @@
 import uuid
-
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
-from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import ValidationError
-import json
 from config.settings import redis_client_first_db, redis_client_second_db
 from products.models import Product
 
@@ -67,7 +63,6 @@ class BasketAndOrderRedisAdapter:
         return self.basket_to_display
 
     def add_or_update_address(self):
-        print(self.address)
         if self.request.method == "POST":
             if not self.address:
                 raise ValueError("address must be set!")

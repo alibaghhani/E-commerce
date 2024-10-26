@@ -3,11 +3,9 @@ from django.http import HttpRequest
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-
 from authentication.models import Address
 from authentication.permissions import IsOwner
-from rest_framework.viewsets import ViewSet, ModelViewSet
-import json
+from rest_framework.viewsets import ViewSet
 
 from order.basket import BasketAndOrderRedisAdapter
 
@@ -73,9 +71,7 @@ class BasketSubmitViewSet(ViewSet):
         return Response({"basket": basket.display_basket()}, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
-        print("here we go")
         address_id = request.POST.get("address_id")
-        print("here we go")
         try:
             address = Address.objects.get(id=int(address_id))
             basket = BasketAndOrderRedisAdapter(request=request, address=str(address_id))

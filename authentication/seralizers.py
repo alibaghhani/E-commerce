@@ -1,6 +1,5 @@
 from django.core.validators import RegexValidator
 from django.http import HttpRequest
-
 from authentication.models import User, CustomerProfile, SellerProfile, Address
 from rest_framework import serializers
 from core.validator import email_validator, username_validator, password_validator

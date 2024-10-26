@@ -1,16 +1,14 @@
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.http import HttpRequest
-from django.shortcuts import render
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAdminUser
-from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from authentication.models import User, CustomerProfile, SellerProfile, Address
+from authentication.models import User, SellerProfile, Address
 from authentication.seralizers import CustomerProfileSerializer, SellerProfileSerializer, AddressSerializer, \
     UserSerializer
-from rest_framework.viewsets import ModelViewSet, ViewSet, GenericViewSet
+from rest_framework.viewsets import ViewSet, GenericViewSet
 from rest_framework import mixins
 from .permissions import IsOwner
 
@@ -27,7 +25,6 @@ class CustomerViewSet(ViewSet):
                 user = serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             except IntegrityError as e:
-                print(e.args)
                 if 'unique constraint' in e.args[0]:
                     return Response({"error": "Username or email already exists"}, status=status.HTTP_409_CONFLICT)
                 return Response({"error": "Username or email already exists"},

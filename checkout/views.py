@@ -1,11 +1,6 @@
-import uuid
-from uuid import uuid3
-
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-
 from order.basket import BasketAndOrderRedisAdapter
-
 from django.http import HttpRequest
 from rest_framework.decorators import api_view, authentication_classes
 
