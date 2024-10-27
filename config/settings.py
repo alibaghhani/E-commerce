@@ -161,14 +161,14 @@ SWAGGER_SETTINGS = {
 }
 
 redis_client_first_db = redis.StrictRedis(
-    host="localhost",
-    port=6379,
-    db=1,
+    host=os.getenv("FIRST_DB_HOST"),
+    port=os.getenv("FIRST_DB_PORT"),
+    db=os.getenv("FIRST_DB"),
 )
 redis_client_second_db = redis.StrictRedis(
-    host="localhost",
-    port=6379,
-    db=3
+    host=os.getenv("PAYMENT_DB_HOST"),
+    port=os.getenv("PAYMENT_DB_PORT"),
+    db=os.getenv("PAYMENT_DB")
 )
 
 CACHES = {
