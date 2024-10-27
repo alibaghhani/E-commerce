@@ -94,12 +94,10 @@ class AllProductsViewSet(ModelViewSet):
     lookup_field = "slug"
 
     def get_permissions(self):
-        if self.action in ['retrieve', 'update']:
+        if self.action in ['retrieve', 'update', 'create']:
             return [IsSellerOrAdminOrReadOnly()]
         if self.action == 'list':
             return [AllowAny()]
-        if self.action ==  'destroy':
-            return [SoftDeleteAndHardDeleteBasedOnUsersRole()]
         return super().get_permissions()
 
     def get_serializer_class(self, *args, **kwargs):
