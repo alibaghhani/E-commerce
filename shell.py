@@ -1,137 +1,78 @@
-import os
-import django
 import random
 import uuid
-from faker import Faker
-from slugify import slugify
+from django.utils.text import slugify
+from authentication.models import User, SellerProfile
+from authentication.models import *
+from order.models import *
+from products.models import *
+# Create Categories
+categories = []
+for i in range(20):
+    categories.append(Category(name=f"Category {i + 1}"))
+Category.objects.bulk_create(categories)
 
-# Set up Django environment
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')  # Replace 'myproject' with your project name
-django.setup()
+# Create Users
+users = []
+for i in range(100):
+    users.append(User(
+        username=f"user_{i + 1}",
+        email=f"user_{i + 1}@gmail.com",
+        password='password123',  # Set a default password for simplicity
+        is_staff=False,
+        is_superuser=False
+    ))
+User.objects.bulk_create(users)
 
-# Import models
-from authentication.models import User, SellerProfile, CustomerProfile, Address
-from products.models import Product, Category, Image
-from order.models import Basket
-from core.models import TimeStampMixin
-from django.contrib.auth.hashers import make_password
+# Create Seller Profiles
+seller_profiles = []
+for user in users[:20]:  # Assign SellerProfile to the first 20 users
+    seller_profiles.append(SellerProfile(
+        user=user,
+        first_name=f"FirstName_{user.username}",
+        last_name=f"LastName_{user.username}",
+        company_name=f"Company_{user.username}",
+        about_company=f"About {user.username}"
+    ))
+SellerProfile.objects.bulk_create(seller_profiles)
 
-# Initialize faker instance
-fake = Faker()
+# Create Discount Codes
+discount_codes = []
+for i in range(100):
+    discount_codes.append(DiscountCode(
+        code=f"DIST_CODE_{i + 1}",
+        type_of_discount=random.choice(['percentage', 'cash']),
+        discount=random.randint(1, 50),  # Random discount between 1 and 50
+        user=random.choice(users)
+    ))
+DiscountCode.objects.bulk_create(discount_codes)
 
+# Create Products
+products = []
+categories = list(Category.objects.all())  # Get all categories
+for i in range(100):
+    products.append(Product(
+        name=f"Product {i + 1}",
+        price=random.randint(1000, 10000),  # Random price between 1000 and 10000
+        detail=f"This is a description for product {i + 1}.",
+        category=random.choice(categories),
+        warehouse=random.randint(1, 100),  # Random warehouse number between 1 and 100
+        slug=slugify(f"product-{i + 1}-{uuid.uuid4()}"),
+        seller=random.choice(seller_profiles)  # Random seller profile
+    ))
+Product.objects.bulk_create(products)
 
-def create_users():
-    users = []
-    for _ in range(100):
-        user = User.objects.create(
-            username=fake.unique.user_name(),
-            email=fake.unique.email(),
-            password=make_password("password123"),
-            is_superuser=False,
-            is_staff=False,
-            is_seller=random.choice([True, False]),
-            uuid=uuid.uuid4()
-        )
-        users.append(user)
-    return users
+# Create Addresses for users
+addresses = []
+for user in users:
+    addresses.append(Address(
+        costumer=user,
+        province="Province A",
+        city="City B",
+        street="Street C",
+        alley="Alley D",
+        house_number=str(random.randint(1, 100)),
+        full_address=f"{user.username}'s Full Address"
+    ))
+Address.objects.bulk_create(addresses)
 
-
-def create_seller_profiles(users):
-    sellers = [user for user in users if user.is_seller]
-    seller_profiles = []
-    for user in sellers:
-        seller_profile = SellerProfile.objects.create(
-            user=user,
-            first_name=fake.first_name(),
-            last_name=fake.last_name(),
-            company_name=fake.company(),
-            about_company=fake.paragraph()
-        )
-        seller_profiles.append(seller_profile)
-    return seller_profiles
-
-
-def create_customer_profiles(users):
-    customers = [user for user in users if not user.is_seller]
-    customer_profiles = []
-    for user in customers:
-        customer_profile = CustomerProfile.objects.create(
-            user=user,
-            first_name=fake.first_name(),
-            last_name=fake.last_name()
-        )
-        customer_profiles.append(customer_profile)
-    return customer_profiles
-
-
-def create_categories():
-    categories = []
-    for _ in range(10):
-        category = Category.objects.create(
-            name=fake.word(),
-            parent=None  # Add parent relationships if needed
-        )
-        categories.append(category)
-    return categories
-
-
-def create_products(seller_profiles, categories):
-    products = []
-    for _ in range(100):
-        product = Product.objects.create(
-            name=fake.word(),
-            price=random.randint(10, 1000),
-            detail=fake.paragraph(),
-            category=random.choice(categories),
-            warehouse=random.randint(1, 100),
-            slug=slugify(fake.unique.word()),
-            seller=random.choice(seller_profiles)
-        )
-        products.append(product)
-    return products
-
-
-def create_images(products):
-    for product in products:
-        Image.objects.create(
-            product=product,
-            image=fake.image_url()  # Use actual images if needed; adjust this as per your setup.
-        )
-
-
-def create_baskets(customer_profiles, products):
-    for customer in customer_profiles:
-        basket = Basket.objects.create(
-            customer=customer,
-            products_list=[random.choice(products).id for _ in range(random.randint(1, 5))],
-            quantity=random.randint(1, 10),
-            product=random.choice(products)
-        )
-
-
-def create_addresses(users):
-    for user in users:
-        Address.objects.create(
-            costumer=user,
-            province=fake.state(),
-            city=fake.city(),
-            street=fake.street_name(),
-            alley=fake.street_address(),
-            house_number=str(random.randint(1, 9999)),
-            full_address=fake.address()
-        )
-
-
-def main():
-    users = create_users()
-    seller_profiles = create_seller_profiles(users)
-    customer_profiles = create_customer_profiles(users)
-    categories = create_categories()
-    products = create_products(seller_profiles, categories)
-    create_images(products)
-    create_baskets(customer_profiles, products)
-    create_addresses(users)
-
-
-if __name__ == '__main__':
-    main()
+print('Successfully created sample data.')
