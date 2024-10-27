@@ -1,10 +1,13 @@
 import uuid
+
+from django.contrib.auth import get_user_model
+
 from authentication.models import SellerProfile, User
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from core.models import TimeStampMixin, SoftDelete
 from slugify import slugify
-
+user = get_user_model()
 
 class Product(TimeStampMixin, SoftDelete):
     """
@@ -27,6 +30,23 @@ class Product(TimeStampMixin, SoftDelete):
 
     expired_at = None
 
+    def get_discounted_price(self):
+        discounts = self.product_discount.all()
+        discounted_price = self.price
+
+        for discount in discounts:
+            if discount.type_of_discount == 'percentage':
+                print(discount)
+                discounted_price = self.price - (self.price * (discount.discount / 100))
+            else:
+                discounted_price -= discount.discount
+
+        return discounted_price
+
+    @property
+    def discounted_price(self):
+        return self.get_discounted_price()
+
     def __str__(self):
         return f'{self.name}'
 
@@ -34,6 +54,12 @@ class Product(TimeStampMixin, SoftDelete):
         text = f"{self.slug}{uuid.uuid4()}"
         self.slug = slugify(text)
         super(Product, self).save(*args, **kwargs)
+
+    @property
+    def discount_amount(self):
+        for discount in self.product_discount.all():
+            discount_amount = f"{discount.discount} {discount.type_of_discount}"
+            return discount_amount
 
     class Meta:
         ordering = ('price',)
@@ -68,27 +94,6 @@ class Image(TimeStampMixin, SoftDelete):
     )
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products_post')
-
-
-class DiscountCode(TimeStampMixin):
-    """
-    discount coupon model
-
-    -----fields-----
-        code = models.CharField(max_length=8, blank=True, null=True, unique=True)
-
-    """
-    DISCOUNT_CHOICES = (
-        ('percentage', '%'),
-        ('cash', '$')
-    )
-    type_of_discount = models.CharField(choices=DISCOUNT_CHOICES, max_length=250, null=True, blank=True)
-    discount = models.PositiveIntegerField(blank=True, null=True)
-    code = models.CharField(max_length=8, blank=True, null=True, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='user_discount_code')
-
-    def __str__(self):
-        return "%s" % self.code
 
 
 class Discount(TimeStampMixin):
