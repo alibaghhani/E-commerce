@@ -1,8 +1,11 @@
 import uuid
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
+
+from authentication.models import User
 from config.settings import redis_client_first_db, redis_client_second_db
-from products.models import Product
+from order.models import DiscountCode
+from products.models import Product, Discount
 
 
 class BasketAndOrderRedisAdapter:
@@ -59,7 +62,12 @@ class BasketAndOrderRedisAdapter:
 
         if address:
             self.basket_to_display["address"] = address
-        self.basket_to_display['total_price'] = self.total_price
+        if self.__class__.__client.hexists(f"user:{self.user}", "pay_amount"):
+            total_price = self.__class__.__client.hget(f"user:{self.user}", "pay_amount")
+            self.basket_to_display['total_price'] = float(total_price)
+        else:
+            self.basket_to_display['total_price'] = self.total_price
+
         return self.basket_to_display
 
     def add_or_update_address(self):
@@ -90,12 +98,18 @@ class BasketAndOrderRedisAdapter:
     def get_total_price(self):
         basket = self.__class__.__client.hgetall(f"user:{self.user}")
         basket_dict = {key.decode('utf-8'): value.decode('utf-8') for key, value in basket.items()}
+
         if 'address' in basket_dict:
             del basket_dict['address']
+
         list_of_prices = []
         for key, value in basket_dict.items():
-            price = Product.objects.get(id=str(key)).price
-            list_of_prices.append(price * int(value))
+            if key.isdigit():
+                try:
+                    price = Product.objects.get(id=str(key)).price
+                    list_of_prices.append(price * int(value))
+                except Product.DoesNotExist:
+                    continue
 
         return list_of_prices
 
@@ -114,6 +128,7 @@ class BasketAndOrderRedisAdapter:
 
     def set_payment_information(self, message=None):
         user = get_user_model().objects.get(id=self.user).uuid
+        total_price = self.__class__.__client.hget(f"user:{self.user}", "pay")
         self.__class__.__payment_client.hset(
             f"payment:{str(user)}",
             mapping={
@@ -129,6 +144,39 @@ class BasketAndOrderRedisAdapter:
     def payment_information(self):
         return self.set_payment_information()
 
+    def check_discount(self, code):
+        user = User.objects.get(id=self.user)
+        if user.user_discount_code.filter(code=code).exists():
+            discount_type = DiscountCode.objects.get(code=code).type_of_discount
+            discount = DiscountCode.objects.get(code=code).discount
+            return [discount_type, discount]
+        return None
 
+    @staticmethod
+    def calculate_discount(discount_information: list, total_price):
+        assert len(discount_information) == 2, "invalid input"
+        if discount_information[0] == 'cash':
+            discounted_price = total_price - int(discount_information[1])
+            return discounted_price
+        discounted_price = total_price - (total_price * (int(discount_information[1]) / 100))
+        return discounted_price
 
+    def apply_discount(self, code):
+        total_price = int(self.total_price)
+        discount_information = self.check_discount(code=code)
 
+        if discount_information:
+            amount_to_pay = self.calculate_discount(discount_information=discount_information, total_price=total_price)
+
+            stored_discount = self.__class__.__client.hget(f"user:{self.user}", "discount")
+
+            if stored_discount is not None and stored_discount.decode('utf-8') == '1':
+                raise ValueError('You have already used this code')
+
+            self.__class__.__client.hset(f"user:{self.user}", mapping={
+                "pay_amount": amount_to_pay,
+                "discount": 1
+            })
+            return True
+        else:
+            raise Exception('Invalid code!')
