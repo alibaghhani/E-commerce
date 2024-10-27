@@ -14,8 +14,8 @@ def payment_gateway(request: HttpRequest):
         cvv2 = request.POST.get("cvv2")
         expiration_date = request.POST.get("exp_date")
         password = request.POST.get("password")
-        for i in [card_number, cvv2, expiration_date, password]:
-            if i == None:
+        for item in [card_number, cvv2, expiration_date, password]:
+            if item == None:
                 basket.set_payment_information(message="fail")
                 return Response({"message": "please enter all information"})
             basket.set_payment_information(message="success")
