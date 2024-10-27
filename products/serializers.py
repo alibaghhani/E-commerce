@@ -26,12 +26,18 @@ class CategoryDetailActionSerializer(serializers.ModelSerializer):
 
 
 class ProductListActionSerializer(serializers.ModelSerializer):
+    discounted_price = serializers.ReadOnlyField()
+
     class Meta:
         model = Product
         exclude = ('detail', 'category', 'slug', 'warehouse', 'seller')
 
 
+
 class ProductDetailActionSerializer(serializers.ModelSerializer):
+    discounted_price = serializers.ReadOnlyField()
+    discount_amount = serializers.ReadOnlyField()
+
     class Meta:
         model = Product
         fields = '__all__'
