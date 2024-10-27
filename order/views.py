@@ -6,7 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from authentication.models import Address
 from authentication.permissions import IsOwner
 from rest_framework.viewsets import ViewSet
-
+from rest_framework.decorators import action
 from order.basket import BasketAndOrderRedisAdapter
 
 
@@ -60,6 +60,19 @@ class BasketViewSet(ViewSet):
             return Response({"message": "basket updated successfully"}, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'])
+    def set_discount_code(self, request:HttpRequest, *args, **kwargs):
+        code = request.POST.get("code")
+        basket = BasketAndOrderRedisAdapter(request=request)
+        basket.apply_discount(code=code)
+        return Response({"message": "discount successfully applied!"})
+
+    @action(detail=False, methods=['get'])
+    def get_discounted_price(self, request, *args, **kwargs):
+        basket = BasketAndOrderRedisAdapter(request=request)
+        return Response({"basket":basket.display_basket()})
+
 
 
 class BasketSubmitViewSet(ViewSet):
