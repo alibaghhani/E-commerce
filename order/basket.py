@@ -34,6 +34,7 @@ class BasketAndOrderRedisAdapter:
             if not self.__class__.__client.hexists(f"user:{self.user}", self.product):
 
                 self.__class__.__client.hset(f"user:{self.user}", self.product, self.quantity)
+                self.__class__.__client.hset(f"user:{self.user}", "pay_amount", self.total_price)
                 self.change_stock()
 
             else:
@@ -61,16 +62,19 @@ class BasketAndOrderRedisAdapter:
                 try:
                     product = Product.objects.get(id=str(key))
                     self.basket_to_display[product.name] = value
+                    self.basket_to_display['product_uuid'] = product.slug
                 except Product.DoesNotExist:
                     continue
 
         if address:
             self.basket_to_display["address"] = address
         if self.__class__.__client.hexists(f"user:{self.user}", "pay_amount"):
-            total_price = self.__class__.__client.hget(f"user:{self.user}", "pay_amount")
-            self.basket_to_display['total_price'] = float(total_price)
+            price_after_discount = self.__class__.__client.hget(f"user:{self.user}", "pay_amount")
+            self.basket_to_display['total_price'] = float(self.total_price)
+            self.basket_to_display['price_after_discount'] = float(price_after_discount)
         else:
             self.basket_to_display['total_price'] = self.total_price
+
 
         return self.basket_to_display
 
@@ -132,11 +136,11 @@ class BasketAndOrderRedisAdapter:
 
     def set_payment_information(self, message=None):
         user = get_user_model().objects.get(id=self.user).uuid
-        total_price = self.__class__.__client.hget(f"user:{self.user}", "pay")
+        pay_amount = self.__class__.__client.hget(f"user:{self.user}", "pay_amount")
         self.__class__.__payment_client.hset(
             f"payment:{str(user)}",
             mapping={
-                "total_price": self.total_price,
+                "total_price": pay_amount,
                 "user": str(user),
                 "payment_id": str(uuid.uuid4()),
                 "status": str(message)
@@ -183,6 +187,7 @@ class BasketAndOrderRedisAdapter:
             })
             return True
         else:
+            # self.__class__.__client.hset(f"user:{self.user}", "pay_amount", self.total_price)
             raise RuntimeError('Invalid code!')
 
     def flush_basket(self):
@@ -193,26 +198,34 @@ class BasketAndOrderRedisAdapter:
             return False
 
     def create_order(self):
-        basket_copy = self.basket_to_display.copy()
-        order = self.__class__.__order.objects.create(user=self.user)
+        basket_copy = self.display_basket().copy()
+        user = get_user_model().objects.get(id=self.user)
+        order = Order.objects.create(user=user)
+
         if 'address' in basket_copy:
             order.address = self.get_address(int(basket_copy['address']))
             order.save()
             del basket_copy['address']
-        if 'pay_amount' not in basket_copy:
+
+        if 'price_after_discount' not in basket_copy:
             raise ValueError("basket is not completed yet")
-        order.total_price = basket_copy['pay_amount']
-        del basket_copy['pay_amount']
+
+        order.total_price = basket_copy['price_after_discount']
+        order.save()
+        del basket_copy['price_after_discount']
+
         order.product_list = basket_copy
+        order.save()
+
         self.flush_basket()
         return True
 
     def get_address(self, id):
-        address = self.__class__.__address.objects.get(id=id)
+        address = Address.objects.get(id=id)
         return address.full_address
 
     def validate_basket(self):
         if self.__class__.__client.hexists(f"user:{self.user}", "address") and self.__class__.__client.hexists(
-            f"user:{self.user}", "pay_amount"):
+                f"user:{self.user}", "pay_amount"):
             return True
         raise ValidationError("basket is not complete!")
