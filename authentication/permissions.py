@@ -1,4 +1,8 @@
+from requests import Response
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import BasePermission, SAFE_METHODS
+
+from order.basket import BasketAndOrderRedisAdapter
 
 
 class IsOwner(BasePermission):
@@ -21,3 +25,15 @@ class IsSellerOrAdminOrReadOnly(BasePermission):
         if request.method in SAFE_METHODS:
             return True
         return obj.seller == request.user
+
+class ValidateBasket(BasePermission):
+    def has_permission(self, request, view):
+        basket = BasketAndOrderRedisAdapter(request=request)
+        try:
+            basket.validate_basket()
+            return True
+        except ValidationError:
+            return False
+        except Exception as e:
+            print(e)
+            return False
