@@ -1,16 +1,20 @@
 import uuid
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.http import HttpRequest
 
-from authentication.models import User
+from authentication.models import User, Address
 from config.settings import redis_client_first_db, redis_client_second_db
-from order.models import DiscountCode
+from order.models import DiscountCode, Order
 from products.models import Product, Discount
 
 
 class BasketAndOrderRedisAdapter:
     __client = redis_client_first_db
     __payment_client = redis_client_second_db
+
+    __address = Address()
+    __order = Order()
 
     def __init__(self, request: HttpRequest = None, product=None, quantity=None, address=None):
         self.request = request
@@ -179,4 +183,36 @@ class BasketAndOrderRedisAdapter:
             })
             return True
         else:
-            raise Exception('Invalid code!')
+            raise RuntimeError('Invalid code!')
+
+    def flush_basket(self):
+        try:
+            self.__class__.__client.delete(f"user:{self.user}")
+            return True
+        except Exception:
+            return False
+
+    def create_order(self):
+        basket_copy = self.basket_to_display.copy()
+        order = self.__class__.__order.objects.create(user=self.user)
+        if 'address' in basket_copy:
+            order.address = self.get_address(int(basket_copy['address']))
+            order.save()
+            del basket_copy['address']
+        if 'pay_amount' not in basket_copy:
+            raise ValueError("basket is not completed yet")
+        order.total_price = basket_copy['pay_amount']
+        del basket_copy['pay_amount']
+        order.product_list = basket_copy
+        self.flush_basket()
+        return True
+
+    def get_address(self, id):
+        address = self.__class__.__address.objects.get(id=id)
+        return address.full_address
+
+    def validate_basket(self):
+        if self.__class__.__client.hexists(f"user:{self.user}", "address") and self.__class__.__client.hexists(
+            f"user:{self.user}", "pay_amount"):
+            return True
+        raise ValidationError("basket is not complete!")
