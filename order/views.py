@@ -62,17 +62,21 @@ class BasketViewSet(ViewSet):
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])
-    def set_discount_code(self, request:HttpRequest, *args, **kwargs):
+    def set_discount_code(self, request: HttpRequest, *args, **kwargs):
         code = request.POST.get("code")
         basket = BasketAndOrderRedisAdapter(request=request)
-        basket.apply_discount(code=code)
-        return Response({"message": "discount successfully applied!"})
+        try:
+            basket.apply_discount(code=code)
+            return Response({"message": "discount successfully applied!"})
+        except ValueError:
+            return Response({"message": "You have already used this code"})
+        except RuntimeError:
+            return Response({"message": "Invalid code!"})
 
     @action(detail=False, methods=['get'])
     def get_discounted_price(self, request, *args, **kwargs):
         basket = BasketAndOrderRedisAdapter(request=request)
-        return Response({"basket":basket.display_basket()})
-
+        return Response({"basket": basket.display_basket()})
 
 
 class BasketSubmitViewSet(ViewSet):
@@ -89,7 +93,6 @@ class BasketSubmitViewSet(ViewSet):
             address = Address.objects.get(id=int(address_id))
             basket = BasketAndOrderRedisAdapter(request=request, address=str(address_id))
             if request.user.id == address.costumer.id:
-
                 basket.add_or_update_address()
                 return Response({"message": "address added successfully"}, status=status.HTTP_403_FORBIDDEN)
             return Response({"message": "you are not the address's owner!"}, status=status.HTTP_201_CREATED)
