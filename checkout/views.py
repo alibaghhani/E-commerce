@@ -23,4 +23,4 @@ def payment_gateway(request: HttpRequest):
             basket.create_order()
             return Response({"message": "payment was successful!"})
     else:
-        return Response({"message": f"pay {basket.total_price}"})
+        return Response({"message": f"pay {basket.display_basket()['price_after_discount']}"})
