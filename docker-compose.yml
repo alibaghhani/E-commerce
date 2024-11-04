@@ -1,0 +1,68 @@
+
+services:
+  db:
+    image: postgres:alpine
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${PASSWORD}
+      POSTGRES_DB: ${NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - web
+
+  redis:
+    image: redis:alpine
+    networks:
+      - web
+
+  app:
+    build:
+      context: .
+    env_file:
+      - .env
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-aaaaaaaaaaaaaaaa}
+      DEBUG: ${DEBUG}
+      DATABASE_URL: ${DATABASE_URL}
+      NAME: ${NAME}
+      DB_USER: ${DB_USER}
+      PASSWORD: ${PASSWORD}
+      HOST: db
+      PORT: 5432
+      FIRST_DB_HOST: redis
+      FIRST_DB_PORT: 6379
+      FIRST_DB: 1
+      PAYMENT_DB_HOST: redis
+      PAYMENT_DB_PORT: 6379
+      PAYMENT_DB: 3
+      MOCK_DB_HOST: redis
+      MOCK_DB_PORT: 6379
+      MOCK_DB: 4
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - assets:/app/assets
+    networks:
+      - web
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - assets:/app/assets
+    ports:
+      - "8001:80"
+    depends_on:
+      - app
+    networks:
+      - web
+
+volumes:
+  assets:
+  db_data:
+
+networks:
+  web:
+    driver: bridge
