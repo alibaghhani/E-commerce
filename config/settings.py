@@ -13,9 +13,9 @@ import os
 import sys
 from datetime import timedelta
 from pathlib import Path
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-load_dotenv("/home/alibaghani/projects/hello/E-commerce/.env")
+# load_dotenv("/home/alibaghani/projects/hello/E-commerce/.env")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,10 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+print(f"{os.getenv('SECRET_KEY')}===========================rgjnij")
 SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = os.getenv('DEBUG')
+DEBUG = False #os.getenv('DEBUG')
 DATABASE_URL = os.getenv('DATABASE_URL')
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 import redis
 
 # Application definition
@@ -135,6 +136,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = 'assets/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -169,6 +171,12 @@ redis_client_second_db = redis.StrictRedis(
     host=os.getenv("PAYMENT_DB_HOST"),
     port=os.getenv("PAYMENT_DB_PORT"),
     db=os.getenv("PAYMENT_DB")
+)
+
+redis_client_mock_db = redis.StrictRedis(
+    host=os.getenv("MOCK_DB_HOST"),
+    port=os.getenv("MOCK_DB_PORT"),
+    db=os.getenv("MOCK_DB")
 )
 
 CACHES = {
