@@ -23,11 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-print(f"{os.getenv('SECRET_KEY')}===========================rgjnij")
 SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = False #os.getenv('DEBUG')
+DEBUG = True #os.getenv('DEBUG')
 DATABASE_URL = os.getenv('DATABASE_URL')
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*']
+#'127.0.0.1', 'localhost', '0.0.0.0'
 import redis
 
 # Application definition

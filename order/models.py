@@ -8,6 +8,9 @@ from products.models import Product
 User = get_user_model()
 
 class Order(TimeStampMixin):
+    """
+    order model
+    """
     user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name='user_order')
     product_list = models.JSONField(default=dict)
     address = models.TextField(default='iran')
