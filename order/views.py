@@ -149,7 +149,7 @@ class BasketSubmitViewSet(ViewSet):
         try:
             address = Address.objects.get(id=int(address_id))
             basket = BasketAndOrderRedisAdapter(request=request, address=str(address_id))
-            if request.user.id == address.customer.id:
+            if request.user.id == address.costumer.id:
                 basket.add_or_update_address()
                 return Response({"message": "Address added successfully."}, status=status.HTTP_201_CREATED)
             return Response({"message": "You are not the address owner!"}, status=status.HTTP_403_FORBIDDEN)
