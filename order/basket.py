@@ -1,3 +1,4 @@
+import json
 import uuid
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -98,7 +99,6 @@ class BasketAndOrderRedisAdapter:
                 try:
                     product = Product.objects.get(id=str(key))
                     self.basket_to_display[product.name] = value
-                    self.basket_to_display['product_uuid'] = product.slug
                 except Product.DoesNotExist:
                     continue
 
@@ -223,7 +223,10 @@ class BasketAndOrderRedisAdapter:
             dict: A dictionary of stored payment information.
         """
         user = get_user_model().objects.get(id=self.user).uuid
-        pay_amount = self.__class__.__client.hget(f"user:{self.user}", "pay_amount")
+        if self.__class__.__client.hexists(f"user:{self.user}", "pay_amount"):
+            pay_amount = self.__class__.__client.hget(f"user:{self.user}", "pay_amount")
+        else:
+            pay_amount = self.total_price
         self.__class__.__payment_client.hset(
             f"payment:{str(user)}",
             mapping={
@@ -354,8 +357,10 @@ class BasketAndOrderRedisAdapter:
         order.total_price = basket_copy['price_after_discount']
         order.save()
         del basket_copy['price_after_discount']
-
-        order.product_list = basket_copy
+        del basket_copy['total_price']
+        #
+        receipt = self.get_receipt(basket_copy)
+        order.product_list = receipt
         order.save()
 
         self.flush_basket()
@@ -384,7 +389,66 @@ class BasketAndOrderRedisAdapter:
         Returns:
             bool: True if the basket is valid, otherwise raises ValidationError.
         """
-        if self.__class__.__client.hexists(f"user:{self.user}", "address") and self.__class__.__client.hexists(
-                f"user:{self.user}", "pay_amount"):
+        if self.__class__.__client.hexists(f"user:{self.user}", "address"):
             return True
         raise ValidationError("Basket is not complete!")
+
+    def get_each_product_information_and_make_receipt(self, basket):
+        """
+        Args:
+            basket:
+        Returns:
+            final receipt (a dictionary containing all product details)
+        """
+        receipt = {}
+        for key, value in basket.items():
+            product_name = key
+            product_obj = Product.objects.get(name=product_name)
+            product_id = product_obj.id
+            product_slug = product_obj.slug
+            product_price = product_obj.price
+            quantity = int(value)
+            total_price = product_price * quantity
+
+
+            receipt[product_id] = self.make_receipt(
+                product_name=product_name,
+                slug=product_slug,
+                price=product_price,
+                quantity=quantity,
+                total_price=total_price
+            )
+        return receipt
+
+    @staticmethod
+    def make_receipt(product_name, slug, price, quantity, total_price):
+        """
+        Args:
+            product: Product ID
+            product_name: Name of the product
+            slug: Product slug
+            price: Unit price of the product
+            quantity: Quantity of the product
+            total_price: Total price for the quantity
+
+        Returns:
+            A dictionary representing the receipt for a single product
+        """
+        return {
+            "name": product_name,
+            "slug": slug,
+            "price": price,
+            "quantity": quantity,
+            "total_price": total_price
+        }
+
+
+    def get_receipt(self, basket):
+        """
+        Args:
+            basket:
+        Returns
+            final receipt
+        """
+        result = self.get_each_product_information_and_make_receipt(basket)
+        return result
