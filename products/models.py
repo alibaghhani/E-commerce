@@ -36,7 +36,6 @@ class Product(TimeStampMixin, SoftDelete):
 
         for discount in discounts:
             if discount.type_of_discount == 'percentage':
-                print(discount)
                 discounted_price = self.price - (self.price * (discount.discount / 100))
             else:
                 discounted_price -= discount.discount
