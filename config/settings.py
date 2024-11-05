@@ -26,8 +26,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True #os.getenv('DEBUG')
 DATABASE_URL = os.getenv('DATABASE_URL')
-ALLOWED_HOSTS = ['*']
-#'127.0.0.1', 'localhost', '0.0.0.0'
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
+#
 import redis
 
 # Application definition
