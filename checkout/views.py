@@ -19,14 +19,14 @@ def payment_gateway(request: HttpRequest):
     Returns:
         Response: JSON response indicating the success or failure of the payment.
     """
-    basket = BasketAndOrderRedisAdapter(request)  # Initialize the basket adapter with the current request
+    basket = BasketAndOrderRedisAdapter(request)
 
     if request.method == "POST":
 
-        card_number = request.POST.get("card_number")
-        cvv2 = request.POST.get("cvv2")
-        expiration_date = request.POST.get("exp_date")
-        password = request.POST.get("password")
+        card_number = request.data.get("card_number")
+        cvv2 = request.data.get("cvv2")
+        expiration_date = request.data.get("exp_date")
+        password = request.data.get("password")
 
         for item in [card_number, cvv2, expiration_date, password]:
             if item is None:
