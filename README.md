@@ -26,7 +26,7 @@ open terminal and create your own env file
 ```
 note: you can set anything for env file's name but
 venv is suggested. 
-for more information vists [venv 🔗](https://docs.python.org/3/tutorial/venv.html#creating-virtual-environments)
+for more information visit [venv 🔗](https://docs.python.org/3/tutorial/venv.html#creating-virtual-environments)
 
 
 activate venv
