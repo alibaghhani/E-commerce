@@ -104,8 +104,7 @@ To run this project, you will need to add the following environment variables to
 please check **env.example** for more information about environment variables.
 
 
-## 🚀 About Me
-I'm a backend developer...
+
 
 
 ## License
