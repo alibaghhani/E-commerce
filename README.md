@@ -43,7 +43,7 @@ install requirements
 
 you should use your own secret_key and db configuration. for secret_key you can visit [secrey_key generator 🔗](https://djecrety.ir/)
 
-check **env.example** file and config it based on your configuration
+check **[env.example](https://github.com/alibaghhani/E-commerce/blob/main/env.example)** file and config it based on your configuration
 
 migrate db 
 
